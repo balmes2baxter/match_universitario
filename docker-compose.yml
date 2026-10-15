@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: match_universitario_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: match_universitario
+      POSTGRES_USER: match
+      POSTGRES_PASSWORD: match_dev_password
+    ports:
+      # 5433 en el host para no chocar con un PostgreSQL local en 5432.
+      - "5433:5432"
+    volumes:
+      - match_universitario_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U match -d match_universitario"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  match_universitario_pgdata:
