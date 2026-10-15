@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'screens/home_shell.dart';
 import 'state/app_state.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const MatchUniversitarioApp());
@@ -18,10 +19,9 @@ class MatchUniversitarioApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Match Universitario',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3F51B5)),
-        ),
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
         home: const HomeShell(),
       ),
     );
