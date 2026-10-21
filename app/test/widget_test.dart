@@ -5,8 +5,17 @@ import 'package:match_universitario_app/models/posting.dart';
 import 'package:match_universitario_app/state/app_state.dart';
 
 void main() {
-  testWidgets('App arranca en el Tablero con publicaciones', (tester) async {
+  testWidgets('App arranca en el Landing de Uniguajira y navega al Tablero', (tester) async {
     await tester.pumpWidget(const MatchUniversitarioApp());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Universidad de La Guajira'),
+      findsWidgets,
+    );
+    expect(find.text('Empieza a hacer Match ya'), findsOneWidget);
+
+    await tester.tap(find.text('Empieza a hacer Match ya'));
     await tester.pumpAndSettle();
 
     expect(find.text('Tablero de Oportunidades'), findsOneWidget);

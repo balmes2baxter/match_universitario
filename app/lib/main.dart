@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'screens/home_shell.dart';
+import 'screens/landing_screen.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
 
@@ -17,12 +17,12 @@ class MatchUniversitarioApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppState(),
       child: MaterialApp(
-        title: 'Match Universitario',
+        title: 'Match Universitario · Uniguajira',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
-        home: const HomeShell(),
+        home: const LandingScreen(),
       ),
     );
   }

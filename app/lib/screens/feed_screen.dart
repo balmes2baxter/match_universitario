@@ -5,6 +5,7 @@ import '../models/posting.dart';
 import '../state/app_state.dart';
 import '../widgets/post_card.dart';
 import 'create_post_screen.dart';
+import 'landing_screen.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -25,7 +26,27 @@ class _FeedScreenState extends State<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tablero de Oportunidades'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tablero de Oportunidades'),
+            Text(
+              'Universidad de La Guajira',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Ver inicio / Acerca de Match Universitario',
+            icon: const Icon(Icons.auto_awesome_outlined),
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const LandingScreen()),
+              );
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openCreatePost(context),
