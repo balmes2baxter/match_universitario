@@ -5,7 +5,8 @@ import '../models/posting.dart';
 import '../models/user_profile.dart';
 
 /// Estado global del MVP con datos en memoria.
-/// Reemplazará a las llamadas HTTP cuando exista el backend Dart Frog.
+/// Arranca sin sesión iniciada (usuario nuevo) pero con convocatorias y matches
+/// activos en el campus para explorar y probar el flujo completo.
 class AppState extends ChangeNotifier {
   AppState() {
     _currentUser = kDemoCurrentUser;
@@ -33,6 +34,11 @@ class AppState extends ChangeNotifier {
   List<Posting> get myApplications =>
       feed.where((p) => p.applicantIds.contains(_currentUser.id)).toList();
 
+  /// Postulaciones enviadas por el usuario actual que aún están pendientes.
+  List<Posting> get pendingApplications => myApplications
+      .where((p) => !p.acceptedIds.contains(_currentUser.id))
+      .toList();
+
   /// Solicitudes recibidas ("Me interesa") en mis publicaciones.
   int get incomingInterestCount => myPostings
       .fold(0, (sum, p) => sum + p.applicantCount - p.acceptedCount);
@@ -42,25 +48,28 @@ class AppState extends ChangeNotifier {
       .where((p) => p.acceptedIds.contains(_currentUser.id))
       .toList();
 
+  /// Matches ya existentes entre estudiantes de la plataforma.
+  List<Posting> get campusMatches =>
+      feed.where((p) => p.acceptedCount > 0).toList();
+
   void _rebuildDirectory() {
-    _directory
-      ..clear()
-      ..[_currentUser.id] = _currentUser;
+    _directory.clear();
+    if (hasProfile) {
+      _directory[_currentUser.id] = _currentUser;
+    }
     for (final u in kMockDirectory) {
       _directory[u.id] = u;
     }
   }
 
   UserProfile? profileById(String id) {
-    if (id == _currentUser.id) return _currentUser;
+    if (id == _currentUser.id) return hasProfile ? _currentUser : null;
     return _directory[id];
   }
 
   void registerOrUpdateProfile(UserProfile profile) {
     _currentUser = profile;
-    _posts
-        .asMap()
-        .forEach((index, post) {
+    _posts.asMap().forEach((index, post) {
       if (post.authorId == profile.id) {
         _posts[index] = post.copyWith(
           authorName: profile.name,
@@ -72,6 +81,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Cierra la sesión actual para volver a probar como visitante / usuario nuevo.
+  void logout() {
+    _currentUser = kDemoCurrentUser;
+    _rebuildDirectory();
+    notifyListeners();
+  }
+
   Posting addPost({
     required PostType type,
     required String title,
@@ -79,17 +95,26 @@ class AppState extends ChangeNotifier {
     String? targetCareer,
     String? location,
   }) {
+    final authorName = hasProfile ? _currentUser.name : 'Estudiante Uniguajira';
+    final authorCareer = hasProfile ? _currentUser.career : 'Uniguajira';
+    // En modo demo, pre-asignamos 1 estudiante interesado para que el usuario
+    // nuevo pueda probar de inmediato el botón "Aceptar" en sus avisos.
+    final initialApplicants =
+        type == PostType.evento ? const <String>[] : const <String>['u1'];
     final post = Posting(
       id: 'p${DateTime.now().microsecondsSinceEpoch}',
       authorId: _currentUser.id,
-      authorName: _currentUser.name,
-      authorCareer: _currentUser.career,
+      authorName: authorName,
+      authorCareer: authorCareer,
       type: type,
       title: title.trim(),
       description: description.trim(),
-      targetCareer: (targetCareer?.trim().isEmpty ?? true) ? null : targetCareer!.trim(),
+      targetCareer: (targetCareer?.trim().isEmpty ?? true)
+          ? null
+          : targetCareer!.trim(),
       location: (location?.trim().isEmpty ?? true) ? null : location!.trim(),
       createdAt: DateTime.now(),
+      applicantIds: initialApplicants,
     );
     _posts.add(post);
     notifyListeners();
@@ -115,6 +140,17 @@ class AppState extends ChangeNotifier {
     _replace(
       post,
       post.copyWith(acceptedIds: [...post.acceptedIds, applicantId]),
+    );
+    notifyListeners();
+  }
+
+  /// Permite en la demo simular que el autor de una publicación acepta el Match
+  /// del usuario actual, desbloqueando el WhatsApp o correo al instante.
+  void simulateAuthorAcceptsMe(Posting post) {
+    if (!hasApplied(post) || post.acceptedIds.contains(_currentUser.id)) return;
+    _replace(
+      post,
+      post.copyWith(acceptedIds: [...post.acceptedIds, _currentUser.id]),
     );
     notifyListeners();
   }

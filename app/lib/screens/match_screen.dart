@@ -14,19 +14,23 @@ class MatchScreen extends StatelessWidget {
     final myPostsWithApplicants = appState.myPostings
         .where((p) => p.applicantCount > 0)
         .toList();
+    final pendingApps = appState.pendingApplications;
     final matches = appState.confirmedMatches;
+    final campusMatches = appState.campusMatches;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Matches')),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          _SectionHeader(
+          const _SectionHeader(
             icon: Icons.mark_email_unread_outlined,
             title: 'Interesados en mis publicaciones',
           ),
           if (myPostsWithApplicants.isEmpty)
-            const _EmptyHint('Todavía nadie marca "Me interesa" en tus avisos.')
+            const _EmptyHint(
+              'Publica un aviso en el Tablero para recibir estudiantes interesados y aceptar Matches.',
+            )
           else
             ...myPostsWithApplicants.map(
               (post) => _ApplicantsCard(posting: post),
@@ -34,12 +38,24 @@ class MatchScreen extends StatelessWidget {
           const SizedBox(height: 8),
           const _SectionHeader(
             icon: Icons.handshake_outlined,
-            title: 'Mis coincidencias',
+            title: 'Mis coincidencias y postulaciones',
           ),
-          if (matches.isEmpty)
-            const _EmptyHint('Cuando te acepten, aquí verás el contacto.')
-          else
+          if (matches.isEmpty && pendingApps.isEmpty)
+            const _EmptyHint(
+              'Pulsa "Me interesa" en cualquier aviso del Tablero. Cuando te acepten, aquí se desbloqueará el WhatsApp o correo.',
+            )
+          else ...[
             ...matches.map((post) => _ConfirmedCard(posting: post)),
+            ...pendingApps.map((post) => _PendingApplicationCard(posting: post)),
+          ],
+          const SizedBox(height: 8),
+          const _SectionHeader(
+            icon: Icons.groups_2_outlined,
+            title: 'Matches activos en el campus · Uniguajira',
+          ),
+          ...campusMatches.map(
+            (post) => _CampusMatchCard(posting: post),
+          ),
         ],
       ),
     );
@@ -61,10 +77,12 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Icon(icon, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              title,
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -200,6 +218,58 @@ class _ApplicantTile extends StatelessWidget {
   }
 }
 
+class _PendingApplicationCard extends StatelessWidget {
+  const _PendingApplicationCard({required this.posting});
+
+  final Posting posting;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appState = context.read<AppState>();
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(posting.type.emoji),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    posting.title,
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Chip(
+                  visualDensity: VisualDensity.compact,
+                  label: const Text('Solicitud enviada'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Publicado por ${posting.authorName} (${posting.authorCareer})',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: () => appState.simulateAuthorAcceptsMe(posting),
+              icon: const Icon(Icons.bolt_rounded, size: 18),
+              label: const Text('Simular que me aceptan el Match'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ConfirmedCard extends StatelessWidget {
   const _ConfirmedCard({required this.posting});
 
@@ -235,6 +305,69 @@ class _ConfirmedCard extends StatelessWidget {
             if (author != null) ...[
               const SizedBox(height: 12),
               _ContactBox(profile: author),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CampusMatchCard extends StatelessWidget {
+  const _CampusMatchCard({required this.posting});
+
+  final Posting posting;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final appState = context.watch<AppState>();
+    final acceptedProfiles = appState.acceptedContactsFor(posting);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.handshake_rounded,
+                  size: 18,
+                  color: theme.colorScheme.tertiary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    posting.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Autor: ${posting.authorName} (${posting.authorCareer})',
+              style: theme.textTheme.bodySmall,
+            ),
+            if (acceptedProfiles.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final p in acceptedProfiles)
+                    Chip(
+                      visualDensity: VisualDensity.compact,
+                      avatar: CircleAvatar(child: Text(p.initials)),
+                      label: Text('Match con ${p.name} (${p.career})'),
+                    ),
+                ],
+              ),
             ],
           ],
         ),

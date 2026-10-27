@@ -5,7 +5,9 @@ import '../models/user_profile.dart';
 import '../state/app_state.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.popOnSave = false});
+
+  final bool popOnSave;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -25,11 +27,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final user = context.read<AppState>().currentUser;
+    final appState = context.read<AppState>();
+    final user = appState.currentUser;
     _name = TextEditingController(text: user.name);
     _email = TextEditingController(text: user.universityEmail);
     _career = TextEditingController(text: user.career);
-    _semester = TextEditingController(text: user.semester.toString());
+    _semester = TextEditingController(
+      text: appState.hasProfile ? user.semester.toString() : '',
+    );
     _skills = TextEditingController(text: user.skills.join(', '));
     _contact = TextEditingController(text: user.contactValue);
     _bio = TextEditingController(text: user.bio);
@@ -50,7 +55,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final current = context.read<AppState>().currentUser;
+    final appState = context.read<AppState>();
+    final wasNewUser = !appState.hasProfile;
+    final current = appState.currentUser;
     final updated = current.copyWith(
       name: _name.text.trim(),
       universityEmail: _email.text.trim(),
@@ -65,49 +72,129 @@ class _ProfileScreenState extends State<ProfileScreen> {
       contactValue: _contact.text.trim(),
       bio: _bio.text.trim(),
     );
-    context.read<AppState>().registerOrUpdateProfile(updated);
+    appState.registerOrUpdateProfile(updated);
     FocusScope.of(context).unfocus();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Perfil guardado')),
+      SnackBar(
+        content: Text(
+          wasNewUser
+              ? '¡Bienvenido/a, ${updated.name}! Ya puedes hacer Match.'
+              : 'Perfil actualizado',
+        ),
+      ),
+    );
+    if (widget.popOnSave && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(true);
+    }
+  }
+
+  void _logout() {
+    context.read<AppState>().logout();
+    _name.clear();
+    _email.clear();
+    _career.clear();
+    _semester.clear();
+    _skills.clear();
+    _contact.clear();
+    _bio.clear();
+    setState(() => _channel = ContactChannel.whatsapp);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sesión cerrada. Ahora estás como usuario nuevo.'),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = context.watch<AppState>().currentUser;
+    final appState = context.watch<AppState>();
+    final user = appState.currentUser;
+    final hasProfile = appState.hasProfile;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi perfil')),
+      appBar: AppBar(
+        title: Text(hasProfile ? 'Mi perfil' : 'Crear perfil · Usuario nuevo'),
+        actions: [
+          if (hasProfile)
+            TextButton.icon(
+              onPressed: _logout,
+              icon: const Icon(Icons.logout_rounded, size: 18),
+              label: const Text('Cerrar sesión'),
+            ),
+        ],
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Center(
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child: Text(
-                  user.initials,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.bold,
+            if (!hasProfile)
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.person_add_alt_1_rounded,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Registro rápido de estudiante',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'No tienes sesión iniciada. Completa tus datos para postularte con "Me interesa", publicar convocatorias y desbloquear contactos de Match.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else ...[
+              Center(
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  child: Text(
+                    user.initials,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: theme.colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                '${user.career} · Semestre ${user.semester}',
-                style: theme.textTheme.bodyMedium,
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  '${user.career} · Semestre ${user.semester}',
+                  style: theme.textTheme.bodyMedium,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
             _field(_name, 'Nombre completo',
                 validator: _required('Escribe tu nombre')),
-            _field(_email, 'Correo universitario',
+            _field(_email, 'Correo universitario (@uniguajira.edu.co)',
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   final v = value?.trim() ?? '';
@@ -115,9 +202,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!v.contains('@')) return 'Correo inválido';
                   return null;
                 }),
-            _field(_career, 'Carrera',
+            _field(_career, 'Carrera / Programa académico',
+                helper: 'Ej: Ingeniería de Sistemas, Diseño, Administración',
                 validator: _required('Escribe tu carrera')),
-            _field(_semester, 'Semestre',
+            _field(_semester, 'Semestre (1 a 12)',
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   final n = int.tryParse(value?.trim() ?? '');
@@ -146,15 +234,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             const SizedBox(height: 16),
-            _field(_contact, 'Dato de contacto',
-                helper: 'Número de WhatsApp o correo',
+            _field(_contact, 'Dato de contacto (se revela solo al hacer Match)',
+                helper: 'Número de WhatsApp (+57...) o correo',
                 validator: _required('Escribe un dato de contacto')),
             _field(_bio, 'Sobre mí (opcional)', maxLines: 3),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: _save,
-              icon: const Icon(Icons.save_outlined),
-              label: const Text('Guardar cambios'),
+              icon: Icon(
+                hasProfile ? Icons.save_outlined : Icons.rocket_launch_rounded,
+              ),
+              label: Text(
+                hasProfile
+                    ? 'Guardar cambios'
+                    : 'Crear mi perfil y empezar a hacer Match',
+              ),
             ),
           ],
         ),

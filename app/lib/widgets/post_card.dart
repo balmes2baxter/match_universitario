@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/posting.dart';
 import '../state/app_state.dart';
+import '../screens/profile_screen.dart';
 import '../utils/time_ago.dart';
 
 class PostCard extends StatelessWidget {
@@ -178,10 +179,29 @@ class _Footer extends StatelessWidget {
   final bool isOwner;
   final bool applied;
 
+  Future<void> _handleApply(BuildContext context) async {
+    final appState = context.read<AppState>();
+    if (!appState.hasProfile) {
+      final created = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => const ProfileScreen(popOnSave: true),
+        ),
+      );
+      if (created != true || !context.mounted) return;
+    }
+    appState.applyToPost(posting);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Te postulaste a "${posting.title}". Revisa la pestaña Matches.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appState = context.read<AppState>();
 
     if (isOwner) {
       return Row(
@@ -209,13 +229,34 @@ class _Footer extends StatelessWidget {
       );
     }
 
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: FilledButton.icon(
-        onPressed: applied ? null : () => appState.applyToPost(posting),
-        icon: Icon(applied ? Icons.check : Icons.favorite_border, size: 18),
-        label: Text(applied ? 'Interesado' : 'Me interesa'),
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        FilledButton.icon(
+          onPressed: applied ? null : () => _handleApply(context),
+          icon: Icon(applied ? Icons.check : Icons.favorite_border, size: 18),
+          label: Text(applied ? 'Interesado' : 'Me interesa'),
+        ),
+        if (posting.acceptedCount > 0)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.handshake_outlined,
+                size: 16,
+                color: theme.colorScheme.tertiary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${posting.acceptedCount} match activo${posting.acceptedCount == 1 ? '' : 's'}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.tertiary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

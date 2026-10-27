@@ -1,22 +1,33 @@
 import '../models/posting.dart';
 import '../models/user_profile.dart';
 
-/// Usuario "logueado" por defecto para la demo del MVP.
-/// Sin backend todavía, todo vive en memoria.
+/// Usuario inicial sin sesión activa (visitante / usuario nuevo).
+/// El estudiante completará su perfil al registrarse en la app.
 const UserProfile kDemoCurrentUser = UserProfile(
   id: 'me',
-  name: 'Alex Rivera',
-  universityEmail: 'alex.rivera@universidad.edu',
-  career: 'Ingeniería de Sistemas',
-  semester: 6,
-  skills: ['Flutter', 'Dart', 'UI/UX'],
+  name: '',
+  universityEmail: '',
+  career: '',
+  semester: 1,
+  skills: [],
   contactChannel: ContactChannel.whatsapp,
-  contactValue: '+57 300 123 4567',
-  bio: 'Busco equipo para proyectos de desarrollo móvil.',
+  contactValue: '',
+  bio: '',
 );
 
 /// Directorio de estudiantes simulados para poblar el feed y los matches.
 const List<UserProfile> kMockDirectory = [
+  UserProfile(
+    id: 'u13',
+    name: 'Alex Rivera',
+    universityEmail: 'alex.rivera@uniguajira.edu.co',
+    career: 'Ingeniería de Sistemas',
+    semester: 6,
+    skills: ['Flutter', 'Dart', 'UI/UX'],
+    contactChannel: ContactChannel.whatsapp,
+    contactValue: '+57 300 123 4567',
+    bio: 'Busco equipo para proyectos de desarrollo móvil.',
+  ),
   UserProfile(
     id: 'u1',
     name: 'María Fernanda Gómez',
@@ -183,8 +194,8 @@ List<Posting> buildMockPostings() {
       targetCareer: 'Ingeniería de Sistemas',
       location: 'Biblioteca central, sala 3',
       createdAt: now.subtract(const Duration(hours: 8)),
-      applicantIds: const ['u4', 'me'],
-      acceptedIds: const ['me'],
+      applicantIds: const ['u4', 'u13'],
+      acceptedIds: const ['u13'],
     ),
     Posting(
       id: 'p3',
@@ -201,7 +212,7 @@ List<Posting> buildMockPostings() {
     ),
     Posting(
       id: 'p4',
-      authorId: 'me',
+      authorId: 'u13',
       authorName: 'Alex Rivera',
       authorCareer: 'Ingeniería de Sistemas',
       type: PostType.buscaEquipo,
@@ -212,6 +223,7 @@ List<Posting> buildMockPostings() {
       targetCareer: 'Diseño Gráfico',
       createdAt: now.subtract(const Duration(days: 2)),
       applicantIds: const ['u1', 'u5'],
+      acceptedIds: const ['u1'],
     ),
     Posting(
       id: 'p5',
@@ -226,8 +238,8 @@ List<Posting> buildMockPostings() {
           'base de datos para la entrega final.',
       targetCareer: 'Ingeniería de Sistemas',
       createdAt: now.subtract(const Duration(hours: 5)),
-      applicantIds: const ['u2', 'u10', 'me'],
-      acceptedIds: const ['me'],
+      applicantIds: const ['u2', 'u10', 'u13'],
+      acceptedIds: const ['u2'],
     ),
     Posting(
       id: 'p6',

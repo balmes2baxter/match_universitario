@@ -6,6 +6,7 @@ import '../state/app_state.dart';
 import '../widgets/post_card.dart';
 import 'create_post_screen.dart';
 import 'landing_screen.dart';
+import 'profile_screen.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -20,6 +21,7 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
+    final theme = Theme.of(context);
     final posts = _filter == null
         ? appState.feed
         : appState.feed.where((p) => p.type == _filter).toList();
@@ -55,6 +57,40 @@ class _FeedScreenState extends State<FeedScreen> {
       ),
       body: Column(
         children: [
+          if (!appState.hasProfile)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.waving_hand_rounded,
+                    size: 20,
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Estás explorando como usuario nuevo (sin sesión). Crea tu perfil para postularte o publicar.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.tonal(
+                    onPressed: () => _openProfileModal(context),
+                    child: const Text('Crear perfil'),
+                  ),
+                ],
+              ),
+            ),
           SizedBox(
             height: 56,
             child: ListView(
@@ -90,7 +126,21 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
+  Future<bool> _openProfileModal(BuildContext context) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const ProfileScreen(popOnSave: true),
+      ),
+    );
+    return result ?? false;
+  }
+
   Future<void> _openCreatePost(BuildContext context) async {
+    final appState = context.read<AppState>();
+    if (!appState.hasProfile) {
+      final created = await _openProfileModal(context);
+      if (!created || !context.mounted) return;
+    }
     await Navigator.of(context).push<void>(
       MaterialPageRoute(builder: (_) => const CreatePostScreen()),
     );

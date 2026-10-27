@@ -41,7 +41,11 @@ void main() {
 
   test('Aceptar un interesado revela su contacto', () {
     final state = AppState();
-    final myPost = state.myPostings.firstWhere((p) => p.applicantCount > 0);
+    final myPost = state.addPost(
+      type: PostType.buscaEquipo,
+      title: 'Proyecto de grado Uniguajira',
+      description: 'Busco compañero para desarrollo móvil en Flutter.',
+    );
     final applicant = state.applicantsFor(myPost).first;
 
     state.acceptApplicant(myPost, applicant.id);
