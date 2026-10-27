@@ -59,18 +59,40 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
-            SegmentedButton<PostType>(
-              segments: [
-                for (final type in PostType.values)
-                  ButtonSegment<PostType>(
-                    value: type,
-                    icon: Icon(type.icon),
-                    label: Text(type.label),
-                  ),
-              ],
-              selected: {_type},
-              onSelectionChanged: (selection) =>
-                  setState(() => _type = selection.first),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 480;
+                if (isMobile) {
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final type in PostType.values)
+                        ChoiceChip(
+                          selected: _type == type,
+                          avatar: Icon(type.icon, size: 16),
+                          label: Text(type.label),
+                          onSelected: (selected) {
+                            if (selected) setState(() => _type = type);
+                          },
+                        ),
+                    ],
+                  );
+                }
+                return SegmentedButton<PostType>(
+                  segments: [
+                    for (final type in PostType.values)
+                      ButtonSegment<PostType>(
+                        value: type,
+                        icon: Icon(type.icon),
+                        label: Text(type.label),
+                      ),
+                  ],
+                  selected: {_type},
+                  onSelectionChanged: (selection) =>
+                      setState(() => _type = selection.first),
+                );
+              },
             ),
             const SizedBox(height: 8),
             Text(

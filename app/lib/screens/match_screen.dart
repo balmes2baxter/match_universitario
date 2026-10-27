@@ -18,71 +18,95 @@ class MatchScreen extends StatelessWidget {
     final matches = appState.confirmedMatches;
     final campusMatches = appState.campusMatches;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Matches'),
-        actions: [
-          if (appState.hasProfile)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: TextButton.icon(
-                onPressed: () {
-                  appState.logout();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Sesión cerrada. Ahora estás como usuario nuevo.',
-                      ),
-                    ),
-                  );
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Matches', style: TextStyle(fontWeight: FontWeight.bold)),
+            actions: [
+              if (appState.hasProfile)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: isMobile
+                      ? IconButton(
+                          tooltip: 'Cerrar sesión',
+                          onPressed: () {
+                            appState.logout();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Sesión cerrada. Ahora estás como usuario nuevo.',
+                                ),
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.logout_rounded,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        )
+                      : TextButton.icon(
+                          onPressed: () {
+                            appState.logout();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Sesión cerrada. Ahora estás como usuario nuevo.',
+                                ),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                          icon: const Icon(Icons.logout_rounded, size: 18),
+                          label: const Text('Cerrar sesión'),
+                        ),
                 ),
-                icon: const Icon(Icons.logout_rounded, size: 18),
-                label: const Text('Cerrar sesión'),
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.only(bottom: 24),
+            children: [
+              const _SectionHeader(
+                icon: Icons.mark_email_unread_outlined,
+                title: 'Interesados en mis publicaciones',
               ),
-            ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
-        children: [
-          const _SectionHeader(
-            icon: Icons.mark_email_unread_outlined,
-            title: 'Interesados en mis publicaciones',
+              if (myPostsWithApplicants.isEmpty)
+                const _EmptyHint(
+                  'Publica un aviso en el Tablero para recibir estudiantes interesados y aceptar Matches.',
+                )
+              else
+                ...myPostsWithApplicants.map(
+                  (post) => _ApplicantsCard(posting: post),
+                ),
+              const SizedBox(height: 8),
+              const _SectionHeader(
+                icon: Icons.handshake_outlined,
+                title: 'Mis coincidencias y postulaciones',
+              ),
+              if (matches.isEmpty && pendingApps.isEmpty)
+                const _EmptyHint(
+                  'Pulsa "Me interesa" en cualquier aviso del Tablero. Cuando te acepten, aquí se desbloqueará el WhatsApp o correo.',
+                )
+              else ...[
+                ...matches.map((post) => _ConfirmedCard(posting: post)),
+                ...pendingApps.map((post) => _PendingApplicationCard(posting: post)),
+              ],
+              const SizedBox(height: 8),
+              const _SectionHeader(
+                icon: Icons.groups_2_outlined,
+                title: 'Matches activos en el campus · Uniguajira',
+              ),
+              ...campusMatches.map(
+                (post) => _CampusMatchCard(posting: post),
+              ),
+            ],
           ),
-          if (myPostsWithApplicants.isEmpty)
-            const _EmptyHint(
-              'Publica un aviso en el Tablero para recibir estudiantes interesados y aceptar Matches.',
-            )
-          else
-            ...myPostsWithApplicants.map(
-              (post) => _ApplicantsCard(posting: post),
-            ),
-          const SizedBox(height: 8),
-          const _SectionHeader(
-            icon: Icons.handshake_outlined,
-            title: 'Mis coincidencias y postulaciones',
-          ),
-          if (matches.isEmpty && pendingApps.isEmpty)
-            const _EmptyHint(
-              'Pulsa "Me interesa" en cualquier aviso del Tablero. Cuando te acepten, aquí se desbloqueará el WhatsApp o correo.',
-            )
-          else ...[
-            ...matches.map((post) => _ConfirmedCard(posting: post)),
-            ...pendingApps.map((post) => _PendingApplicationCard(posting: post)),
-          ],
-          const SizedBox(height: 8),
-          const _SectionHeader(
-            icon: Icons.groups_2_outlined,
-            title: 'Matches activos en el campus · Uniguajira',
-          ),
-          ...campusMatches.map(
-            (post) => _CampusMatchCard(posting: post),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -254,30 +278,51 @@ class _PendingApplicationCard extends StatelessWidget {
     final appState = context.read<AppState>();
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(posting.type.emoji),
+                Text(posting.type.emoji, style: const TextStyle(fontSize: 16)),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    posting.title,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        posting.title,
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Solicitud enviada',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                Chip(
-                  visualDensity: VisualDensity.compact,
-                  label: const Text('Solicitud enviada'),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               'Publicado por ${posting.authorName} (${posting.authorCareer})',
               style: theme.textTheme.bodySmall,

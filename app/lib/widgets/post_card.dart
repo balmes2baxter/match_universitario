@@ -53,7 +53,7 @@ class PostCard extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -79,23 +79,23 @@ class PostCard extends StatelessWidget {
                       child: author != null
                           ? ProfileAvatar(
                               profile: author,
-                              radius: 20,
+                              radius: 19,
                               showBorder: false,
                             )
                           : CircleAvatar(
-                              radius: 20,
+                              radius: 19,
                               backgroundColor: scheme.primaryContainer,
                               child: Text(
                                 _initials(posting.authorName),
                                 style: TextStyle(
                                   color: scheme.onPrimaryContainer,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                               ),
                             ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
 
                     // Nombre y Carrera
                     Expanded(
@@ -115,29 +115,14 @@ class PostCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    posting.authorName,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  '· Ver perfil',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: scheme.primary,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              posting.authorName,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 1),
                             Text(
@@ -146,7 +131,7 @@ class PostCard extends StatelessWidget {
                                   : posting.authorCareer,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
-                                fontSize: 12,
+                                fontSize: 11.5,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -155,12 +140,13 @@ class PostCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
 
                     // Tag de Categoría compacto
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
+                        horizontal: 8,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: accent.withValues(alpha: 0.12),
@@ -181,7 +167,7 @@ class PostCard extends StatelessWidget {
                           Text(
                             posting.type.label,
                             style: TextStyle(
-                              fontSize: 11.5,
+                              fontSize: 11,
                               fontWeight: FontWeight.w800,
                               color: accent,
                             ),
@@ -191,14 +177,14 @@ class PostCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
 
                 // 2. TÍTULO
                 Text(
                   posting.title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
-                    fontSize: 16.5,
+                    fontSize: 16,
                     height: 1.25,
                   ),
                 ),
@@ -209,28 +195,28 @@ class PostCard extends StatelessWidget {
                   posting.description,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 13.5,
-                    height: 1.4,
+                    fontSize: 13,
+                    height: 1.35,
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
 
                 // 4. METADATOS: Perfil buscado / Lugar del campus
                 if (posting.targetCareer != null || posting.location != null)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      horizontal: 10,
+                      vertical: 7,
                     ),
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Wrap(
-                      spacing: 14,
+                      spacing: 12,
                       runSpacing: 4,
                       children: [
                         if (posting.targetCareer != null)
@@ -239,15 +225,15 @@ class PostCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.person_search_rounded,
-                                size: 15,
+                                size: 14,
                                 color: scheme.primary,
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
                                   'Busca: ${posting.targetCareer!}',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
                                     color: scheme.onSurface,
                                   ),
@@ -261,15 +247,15 @@ class PostCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.place_rounded,
-                                size: 15,
+                                size: 14,
                                 color: scheme.tertiary,
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
                                   posting.location!,
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
                                     color: scheme.onSurface,
                                   ),
@@ -281,7 +267,7 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
 
                 // 5. PIE DE TARJETA: Tiempo + Postulados + Botón de Acción
                 Row(
@@ -289,36 +275,38 @@ class PostCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Tiempo relativo + postulados
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.schedule_rounded,
-                          size: 13,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          timeAgo(posting.createdAt),
-                          style: TextStyle(
-                            fontSize: 11.5,
+                    Expanded(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.schedule_rounded,
+                            size: 13,
                             color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
                           ),
-                        ),
-                        if (posting.applicantCount > 0) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            '· ${posting.applicantCount} postulado${posting.applicantCount == 1 ? '' : 's'}',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: scheme.primary,
-                              fontWeight: FontWeight.w700,
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              posting.applicantCount > 0
+                                  ? '${timeAgo(posting.createdAt)} · ${posting.applicantCount} postulado${posting.applicantCount == 1 ? '' : 's'}'
+                                  : timeAgo(posting.createdAt),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: posting.applicantCount > 0
+                                    ? scheme.primary
+                                    : scheme.onSurfaceVariant,
+                                fontWeight: posting.applicantCount > 0
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
-                      ],
+                      ),
                     ),
+                    const SizedBox(width: 10),
 
                     // Botón de acción
                     _FooterAction(

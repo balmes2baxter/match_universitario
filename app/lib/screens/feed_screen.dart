@@ -89,17 +89,21 @@ class _FeedScreenState extends State<FeedScreen> {
                   'Tablero de Oportunidades',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: isMobile ? 18 : 20,
+                    fontSize: isMobile ? 17 : 20,
                     letterSpacing: -0.3,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'Universidad de La Guajira · Campus',
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: scheme.primary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -107,11 +111,11 @@ class _FeedScreenState extends State<FeedScreen> {
               if (isMobile) ...[
                 // En móvil: botón compacto para publicar + menú emergente elegante
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(right: 4),
                   child: FilledButton.tonalIcon(
                     onPressed: () => _openCreatePost(context),
                     style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       visualDensity: VisualDensity.compact,
                     ),
                     icon: const Icon(Icons.add_rounded, size: 18),
@@ -215,8 +219,8 @@ class _FeedScreenState extends State<FeedScreen> {
           ),
           body: SingleChildScrollView(
             padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 14 : 20,
-              vertical: 14,
+              horizontal: isMobile ? 12 : 20,
+              vertical: 12,
             ),
             child: Center(
               child: ConstrainedBox(
@@ -239,33 +243,41 @@ class _FeedScreenState extends State<FeedScreen> {
                             color: scheme.primary.withValues(alpha: 0.35),
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: scheme.primaryContainer,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.person_add_rounded,
-                                size: 18,
-                                color: scheme.onPrimaryContainer,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                        child: LayoutBuilder(
+                          builder: (context, visitorConstraints) {
+                            final isVeryNarrow = visitorConstraints.maxWidth < 350;
+                            if (isVeryNarrow) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Text(
-                                    'Estás explorando como visitante',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 13,
-                                      color: scheme.onSurface,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(7),
+                                        decoration: BoxDecoration(
+                                          color: scheme.primaryContainer,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.person_add_rounded,
+                                          size: 16,
+                                          color: scheme.onPrimaryContainer,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          'Explorando como visitante',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            color: scheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  const SizedBox(height: 6),
                                   Text(
                                     'Crea tu perfil con carrera y diplomados para postularte.',
                                     style: TextStyle(
@@ -273,22 +285,70 @@ class _FeedScreenState extends State<FeedScreen> {
                                       color: scheme.onSurfaceVariant,
                                     ),
                                   ),
+                                  const SizedBox(height: 10),
+                                  FilledButton(
+                                    onPressed: () => _openProfileModal(context),
+                                    style: FilledButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                    ),
+                                    child: const Text('Crear mi perfil'),
+                                  ),
                                 ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            FilledButton(
-                              onPressed: () => _openProfileModal(context),
-                              style: FilledButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 6,
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: scheme.primaryContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.person_add_rounded,
+                                    size: 18,
+                                    color: scheme.onPrimaryContainer,
+                                  ),
                                 ),
-                              ),
-                              child: const Text('Crear perfil'),
-                            ),
-                          ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Estás explorando como visitante',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 13,
+                                          color: scheme.onSurface,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Crea tu perfil con carrera y diplomados para postularte.',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                FilledButton(
+                                  onPressed: () => _openProfileModal(context),
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 6,
+                                    ),
+                                  ),
+                                  child: const Text('Crear perfil'),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
 

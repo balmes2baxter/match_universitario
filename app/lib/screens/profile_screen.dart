@@ -44,150 +44,179 @@ class ProfileScreen extends StatelessWidget {
     final gradient =
         kBannerGradients[user.bannerPreset % kBannerGradients.length];
 
-    return Scaffold(
-      backgroundColor: scheme.surfaceContainerLowest,
-      appBar: AppBar(
-        title: const Text('Dashboard de Mi Perfil'),
-        actions: [
-          if (!hasProfile)
-            TextButton.icon(
-              onPressed: () {
-                appState.registerOrUpdateProfile(
-                  kMockDirectory.first.copyWith(id: 'me'),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Perfil de demostración cargado'),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
-              label: const Text('Probar con datos demo'),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        return Scaffold(
+          backgroundColor: scheme.surfaceContainerLowest,
+          appBar: AppBar(
+            title: Text(
+              isMobile ? 'Mi Perfil' : 'Dashboard de Mi Perfil',
+              style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-          if (hasProfile) ...[
-            IconButton(
-              tooltip: 'Ver cómo me ven otros estudiantes',
-              onPressed: () => showStudentProfileModal(
-                context,
-                user,
-                isCurrentUser: true,
-                onEditRequested: () => showProfileEditorModal(context),
-              ),
-              icon: const Icon(Icons.visibility_outlined),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                appState.logout();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('Sesión cerrada. Ahora estás como usuario nuevo.'),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text('Cerrar sesión'),
-            ),
-          ],
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1080),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 1. CABECERA ESTRUCTURADA DEL PERFIL (PORTADA + AVATAR + ACCIONES)
-                _HeroProfileHeaderCard(
-                  user: user,
-                  hasProfile: hasProfile,
-                  gradient: gradient,
-                  onUploadPhoto: () => _uploadPhotoDirectly(context),
-                  onOpenEditor: ({int tab = 0}) =>
-                      showProfileEditorModal(context, initialTab: tab),
-                  onPreviewPublic: () => showStudentProfileModal(
+            actions: [
+              if (!hasProfile)
+                TextButton.icon(
+                  onPressed: () {
+                    appState.registerOrUpdateProfile(
+                      kMockDirectory.first.copyWith(id: 'me'),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Perfil de demostración cargado'),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
+                  label: Text(isMobile ? 'Demo' : 'Probar datos demo'),
+                ),
+              if (hasProfile) ...[
+                IconButton(
+                  tooltip: 'Ver cómo me ven otros estudiantes',
+                  onPressed: () => showStudentProfileModal(
                     context,
                     user,
                     isCurrentUser: true,
                     onEditRequested: () => showProfileEditorModal(context),
                   ),
+                  icon: const Icon(Icons.visibility_outlined),
                 ),
-                const SizedBox(height: 20),
-
-                // 2. FILA DE KPI / MÉTRICAS DEL ESTUDIANTE
-                _KpiMetricsRow(appState: appState, user: user),
-                const SizedBox(height: 20),
-
-                // 3. GRID ESTRUCTURADO DE 2 COLUMNAS (ACADÉMICO / DIPLOMADOS / SKILLS / CONTACTO)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth >= 820;
-                    final leftColumn = Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _DiplomasAndSemillerosCard(
-                          diplomas: user.diplomas,
-                          onAddTap: () =>
-                              showProfileEditorModal(context, initialTab: 1),
+                if (isMobile)
+                  IconButton(
+                    tooltip: 'Cerrar sesión',
+                    onPressed: () {
+                      appState.logout();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Sesión cerrada. Ahora estás como usuario nuevo.',
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        _ProjectsAndAchievementsCard(
-                          projects: user.projects,
-                          portfolioUrl: user.portfolioUrl,
-                          onAddTap: () =>
-                              showProfileEditorModal(context, initialTab: 1),
-                        ),
-                      ],
-                    );
-
-                    final rightColumn = Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _SkillsAndLanguagesCard(
-                          skills: user.skills,
-                          languages: user.languages,
-                          onEditTap: () =>
-                              showProfileEditorModal(context, initialTab: 1),
-                        ),
-                        const SizedBox(height: 16),
-                        _AcademicAndContactCard(
-                          user: user,
-                          hasProfile: hasProfile,
-                          onEditTap: () =>
-                              showProfileEditorModal(context, initialTab: 2),
-                        ),
-                      ],
-                    );
-
-                    if (isWide) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(flex: 6, child: leftColumn),
-                          const SizedBox(width: 18),
-                          Expanded(flex: 5, child: rightColumn),
-                        ],
                       );
-                    }
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        leftColumn,
-                        const SizedBox(height: 16),
-                        rightColumn,
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 36),
+                    },
+                    icon: Icon(Icons.logout_rounded, color: scheme.error),
+                  )
+                else
+                  TextButton.icon(
+                    onPressed: () {
+                      appState.logout();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Sesión cerrada. Ahora estás como usuario nuevo.',
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.logout_rounded, size: 18),
+                    label: const Text('Cerrar sesión'),
+                  ),
               ],
+              const SizedBox(width: 8),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 12 : 20,
+              vertical: 14,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1080),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1. CABECERA ESTRUCTURADA DEL PERFIL (PORTADA + AVATAR + ACCIONES)
+                    _HeroProfileHeaderCard(
+                      user: user,
+                      hasProfile: hasProfile,
+                      gradient: gradient,
+                      onUploadPhoto: () => _uploadPhotoDirectly(context),
+                      onOpenEditor: ({int tab = 0}) =>
+                          showProfileEditorModal(context, initialTab: tab),
+                      onPreviewPublic: () => showStudentProfileModal(
+                        context,
+                        user,
+                        isCurrentUser: true,
+                        onEditRequested: () => showProfileEditorModal(context),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // 2. FILA DE KPI / MÉTRICAS DEL ESTUDIANTE
+                    _KpiMetricsRow(appState: appState, user: user),
+                    const SizedBox(height: 18),
+
+                    // 3. GRID ESTRUCTURADO DE 2 COLUMNAS (ACADÉMICO / DIPLOMADOS / SKILLS / CONTACTO)
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth >= 820;
+                        final leftColumn = Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _DiplomasAndSemillerosCard(
+                              diplomas: user.diplomas,
+                              onAddTap: () =>
+                                  showProfileEditorModal(context, initialTab: 1),
+                            ),
+                            const SizedBox(height: 16),
+                            _ProjectsAndAchievementsCard(
+                              projects: user.projects,
+                              portfolioUrl: user.portfolioUrl,
+                              onAddTap: () =>
+                                  showProfileEditorModal(context, initialTab: 1),
+                            ),
+                          ],
+                        );
+
+                        final rightColumn = Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _SkillsAndLanguagesCard(
+                              skills: user.skills,
+                              languages: user.languages,
+                              onEditTap: () =>
+                                  showProfileEditorModal(context, initialTab: 1),
+                            ),
+                            const SizedBox(height: 16),
+                            _AcademicAndContactCard(
+                              user: user,
+                              hasProfile: hasProfile,
+                              onEditTap: () =>
+                                  showProfileEditorModal(context, initialTab: 2),
+                            ),
+                          ],
+                        );
+
+                        if (isWide) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(flex: 6, child: leftColumn),
+                              const SizedBox(width: 18),
+                              Expanded(flex: 5, child: rightColumn),
+                            ],
+                          );
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            leftColumn,
+                            const SizedBox(height: 16),
+                            rightColumn,
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 36),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -237,80 +266,119 @@ class _HeroProfileHeaderCard extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.32),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.location_on_rounded,
-                            color: Colors.white,
-                            size: 15,
+                child: LayoutBuilder(
+                  builder: (context, bannerConstraints) {
+                    final isNarrow = bannerConstraints.maxWidth < 620;
+                    if (isNarrow) {
+                      return Align(
+                        alignment: Alignment.topRight,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Universidad de La Guajira · ${user.campus}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12.5,
-                            ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(999),
                           ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF00C853),
-                              shape: BoxShape.circle,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.location_on_rounded,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                user.campus,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            user.availability,
-                            style: const TextStyle(
-                              color: Color(0xFF1F130B),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
-                            ),
+                        ),
+                      );
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.32),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.location_on_rounded,
+                                color: Colors.white,
+                                size: 15,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Universidad de La Guajira · ${user.campus}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF00C853),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                user.availability,
+                                style: const TextStyle(
+                                  color: Color(0xFF1F130B),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
               Positioned(
                 bottom: -44,
-                left: 24,
+                left: 18,
                 child: Stack(
                   children: [
-                    ProfileAvatar(profile: user, radius: 48),
+                    ProfileAvatar(profile: user, radius: 44),
                     Positioned(
                       bottom: 2,
                       right: 2,
@@ -339,7 +407,7 @@ class _HeroProfileHeaderCard extends StatelessWidget {
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 54, 24, 24),
+            padding: const EdgeInsets.fromLTRB(18, 52, 18, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

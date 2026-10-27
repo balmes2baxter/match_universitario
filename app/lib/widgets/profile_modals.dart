@@ -210,14 +210,22 @@ Future<void> showStudentProfileModal(
   bool revealContact = false,
   VoidCallback? onEditRequested,
 }) {
+  final isMobile = MediaQuery.sizeOf(context).width < 600;
   return showDialog<void>(
     context: context,
     builder: (ctx) => Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: isMobile
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: isMobile ? BorderRadius.zero : BorderRadius.circular(28),
+      ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640, maxHeight: 760),
+        constraints: BoxConstraints(
+          maxWidth: isMobile ? double.infinity : 640,
+          maxHeight: isMobile ? double.infinity : 760,
+        ),
         child: _StudentProfilePreviewSheet(
           profile: profile,
           isCurrentUser: isCurrentUser,
@@ -640,15 +648,23 @@ Future<bool> showProfileEditorModal(
   BuildContext context, {
   int initialTab = 0,
 }) async {
+  final isMobile = MediaQuery.sizeOf(context).width < 600;
   final saved = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
     builder: (ctx) => Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      insetPadding: isMobile
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: isMobile ? BorderRadius.zero : BorderRadius.circular(28),
+      ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 740, maxHeight: 820),
+        constraints: BoxConstraints(
+          maxWidth: isMobile ? double.infinity : 740,
+          maxHeight: isMobile ? double.infinity : 820,
+        ),
         child: ProfileEditorSheet(initialTab: initialTab),
       ),
     ),
@@ -841,20 +857,21 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
 
     return Scaffold(
       backgroundColor: scheme.surface,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            // Cabecera visual del modal con vista previa en vivo en tiempo real
-            Container(
-              padding: const EdgeInsets.fromLTRB(18, 14, 16, 14),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // Cabecera visual del modal con vista previa en vivo en tiempo real
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 14, 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: gradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1177,6 +1194,8 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
               color: scheme.surfaceContainerLow,
               child: TabBar(
                 controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 tabs: const [
                   Tab(
                     icon: Icon(Icons.school_outlined, size: 18),
@@ -1207,45 +1226,73 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
 
             // Barra inferior fija con botón de guardar
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerLowest,
                 border: Border(
                   top: BorderSide(color: scheme.outlineVariant),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Completitud: ${(_previewProfile.completeness * 100).round()}%',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      if (!widget.isEmbedded)
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancelar'),
+              child: LayoutBuilder(
+                builder: (context, bConstraints) {
+                  final isMobileBar = bConstraints.maxWidth < 520;
+                  if (isMobileBar) {
+                    return Row(
+                      children: [
+                        if (!widget.isEmbedded)
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            icon: const Icon(Icons.close_rounded),
+                            tooltip: 'Cancelar',
+                          ),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: _saveProfile,
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            icon: const Icon(Icons.check_circle_outline, size: 18),
+                            label: const Text('Guardar Perfil'),
+                          ),
                         ),
-                      const SizedBox(width: 8),
-                      FilledButton.icon(
-                        onPressed: _saveProfile,
-                        icon: const Icon(Icons.check_circle_outline, size: 18),
-                        label: const Text('Guardar mi Perfil'),
+                      ],
+                    );
+                  }
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Completitud: ${(_previewProfile.completeness * 100).round()}%',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          if (!widget.isEmbedded)
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancelar'),
+                            ),
+                          const SizedBox(width: 8),
+                          FilledButton.icon(
+                            onPressed: _saveProfile,
+                            icon: const Icon(Icons.check_circle_outline, size: 18),
+                            label: const Text('Guardar mi Perfil'),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildIdentityTab(BuildContext context) {
