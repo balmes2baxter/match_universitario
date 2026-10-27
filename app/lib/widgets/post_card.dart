@@ -11,54 +11,107 @@ class PostCard extends StatelessWidget {
 
   final Posting posting;
 
+  Color _typeAccentColor(PostType type, ColorScheme scheme) {
+    switch (type) {
+      case PostType.buscaEquipo:
+        return const Color(0xFFEA6A00);
+      case PostType.grupoEstudio:
+        return const Color(0xFFD97706);
+      case PostType.evento:
+        return const Color(0xFFE11D48);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final appState = context.watch<AppState>();
     final isOwner = appState.isOwner(posting);
     final applied = appState.hasApplied(posting);
+    final author = appState.profileById(posting.authorId);
+    final accent = _typeAccentColor(posting.type, scheme);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TypeBanner(type: posting.type),
-          Padding(
-            padding: const EdgeInsets.all(16),
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.65),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    final author = appState.profileById(posting.authorId);
-                    if (author != null) {
-                      showStudentProfileModal(
-                        context,
-                        author,
-                        isCurrentUser: isOwner,
-                        revealContact: posting.acceptedIds
-                            .contains(appState.currentUser.id),
-                      );
-                    }
-                  },
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        child: Text(
-                          _initials(posting.authorName),
-                          style: TextStyle(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
+                // 1. CABECERA: Autor + Badge de Categoría + Hora
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Avatar del autor
+                    InkWell(
+                      borderRadius: BorderRadius.circular(999),
+                      onTap: () {
+                        if (author != null) {
+                          showStudentProfileModal(
+                            context,
+                            author,
+                            isCurrentUser: isOwner,
+                            revealContact: posting.acceptedIds
+                                .contains(appState.currentUser.id),
+                          );
+                        }
+                      },
+                      child: author != null
+                          ? ProfileAvatar(
+                              profile: author,
+                              radius: 20,
+                              showBorder: false,
+                            )
+                          : CircleAvatar(
+                              radius: 20,
+                              backgroundColor: scheme.primaryContainer,
+                              child: Text(
+                                _initials(posting.authorName),
+                                style: TextStyle(
+                                  color: scheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Nombre y Carrera
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () {
+                          if (author != null) {
+                            showStudentProfileModal(
+                              context,
+                              author,
+                              isCurrentUser: isOwner,
+                              revealContact: posting.acceptedIds
+                                  .contains(appState.currentUser.id),
+                            );
+                          }
+                        },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -67,76 +120,218 @@ class PostCard extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     posting.authorName,
-                                    style: theme.textTheme.titleSmall
-                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 5),
                                 Text(
                                   '· Ver perfil',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.primary,
+                                  style: TextStyle(
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w700,
+                                    color: scheme.primary,
                                   ),
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 1),
                             Text(
-                              '${posting.authorCareer} · ${timeAgo(posting.createdAt)}',
+                              author != null
+                                  ? '${posting.authorCareer} · Sem. ${author.semester}'
+                                  : posting.authorCareer,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
+                                color: scheme.onSurfaceVariant,
+                                fontSize: 12,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      if (isOwner)
-                        Chip(
-                          visualDensity: VisualDensity.compact,
-                          avatar: const Icon(Icons.person_outline, size: 16),
-                          label: const Text('Tu publicación'),
+                    ),
+
+                    // Tag de Categoría compacto
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.3),
+                          width: 1.0,
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  posting.title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  posting.description,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    if (posting.targetCareer != null)
-                      _InfoChip(
-                        icon: Icons.school_outlined,
-                        label: posting.targetCareer!,
                       ),
-                    if (posting.location != null)
-                      _InfoChip(
-                        icon: Icons.place_outlined,
-                        label: posting.location!,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            posting.type.emoji,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            posting.type.label,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                              color: accent,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
+                const SizedBox(height: 14),
+
+                // 2. TÍTULO
+                Text(
+                  posting.title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16.5,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // 3. DESCRIPCIÓN
+                Text(
+                  posting.description,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 13.5,
+                    height: 1.4,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 12),
-                _Footer(
-                  posting: posting,
-                  isOwner: isOwner,
-                  applied: applied,
+
+                // 4. METADATOS: Perfil buscado / Lugar del campus
+                if (posting.targetCareer != null || posting.location != null)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Wrap(
+                      spacing: 14,
+                      runSpacing: 4,
+                      children: [
+                        if (posting.targetCareer != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.person_search_rounded,
+                                size: 15,
+                                color: scheme.primary,
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'Busca: ${posting.targetCareer!}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: scheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        if (posting.location != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.place_rounded,
+                                size: 15,
+                                color: scheme.tertiary,
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  posting.location!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: scheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 14),
+
+                // 5. PIE DE TARJETA: Tiempo + Postulados + Botón de Acción
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Tiempo relativo + postulados
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          timeAgo(posting.createdAt),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (posting.applicantCount > 0) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            '· ${posting.applicantCount} postulado${posting.applicantCount == 1 ? '' : 's'}',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+
+                    // Botón de acción
+                    _FooterAction(
+                      posting: posting,
+                      isOwner: isOwner,
+                      applied: applied,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -149,56 +344,8 @@ class PostCard extends StatelessWidget {
   }
 }
 
-class _TypeBanner extends StatelessWidget {
-  const _TypeBanner({required this.type});
-
-  final PostType type;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      color: theme.colorScheme.secondaryContainer,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Text(type.emoji),
-          const SizedBox(width: 8),
-          Text(
-            type.label.toUpperCase(),
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSecondaryContainer,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Chip(
-      visualDensity: VisualDensity.compact,
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
-      labelStyle: theme.textTheme.labelMedium,
-    );
-  }
-}
-
-class _Footer extends StatelessWidget {
-  const _Footer({
+class _FooterAction extends StatelessWidget {
+  const _FooterAction({
     required this.posting,
     required this.isOwner,
     required this.applied,
@@ -227,61 +374,76 @@ class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     if (isOwner) {
-      return Row(
-        children: [
-          Icon(Icons.people_alt_outlined,
-              size: 18, color: theme.colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            posting.applicantCount == 0
-                ? 'Aún no hay interesados'
-                : '${posting.applicantCount} interesado${posting.applicantCount == 1 ? '' : 's'}',
-            style: theme.textTheme.bodySmall,
-          ),
-          if (posting.acceptedCount > 0) ...[
-            const SizedBox(width: 12),
-            Icon(Icons.check_circle_outline,
-                size: 18, color: theme.colorScheme.tertiary),
-            const SizedBox(width: 6),
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.person_pin_circle_outlined, size: 14, color: scheme.primary),
+            const SizedBox(width: 5),
             Text(
-              '${posting.acceptedCount} aceptado${posting.acceptedCount == 1 ? '' : 's'}',
-              style: theme.textTheme.bodySmall,
+              'Tu aviso',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+              ),
             ),
           ],
-        ],
+        ),
       );
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        FilledButton.icon(
-          onPressed: applied ? null : () => _handleApply(context),
-          icon: Icon(applied ? Icons.check : Icons.favorite_border, size: 18),
-          label: Text(applied ? 'Interesado' : 'Me interesa'),
+    if (applied) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
         ),
-        if (posting.acceptedCount > 0)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.handshake_outlined,
-                size: 16,
-                color: theme.colorScheme.tertiary,
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
+            SizedBox(width: 5),
+            Text(
+              'Postulado',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF047857),
               ),
-              const SizedBox(width: 4),
-              Text(
-                '${posting.acceptedCount} match activo${posting.acceptedCount == 1 ? '' : 's'}',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.tertiary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-      ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return FilledButton.icon(
+      onPressed: () => _handleApply(context),
+      style: FilledButton.styleFrom(
+        backgroundColor: const Color(0xFFEA6A00),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        visualDensity: VisualDensity.compact,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        textStyle: const TextStyle(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      icon: const Icon(Icons.favorite_rounded, size: 14),
+      label: const Text('Me interesa'),
     );
   }
 }

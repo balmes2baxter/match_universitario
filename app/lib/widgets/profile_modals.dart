@@ -6,12 +6,12 @@ import '../models/user_profile.dart';
 import '../state/app_state.dart';
 import '../utils/photo_picker.dart';
 
-/// Paletas de portada disponibles para el perfil
+/// Paletas de portada disponibles para el perfil (colores sólidos estáticos)
 const List<List<Color>> kBannerGradients = [
-  [Color(0xFFFF5500), Color(0xFFFFAB00)], // Sunset Guajiro
-  [Color(0xFFD81B60), Color(0xFFFF6D00)], // Coral Wayuu
-  [Color(0xFF00897B), Color(0xFF26C6DA)], // Mar de Riohacha
-  [Color(0xFF3949AB), Color(0xFF8E24AA)], // Noche Estudiantil
+  [Color(0xFFEA6A00), Color(0xFFEA6A00)], // Naranja Uniguajira
+  [Color(0xFFB45309), Color(0xFFB45309)], // Ámbar Terracota
+  [Color(0xFF0F766E), Color(0xFF0F766E)], // Verde Mar Riohacha
+  [Color(0xFF334155), Color(0xFF334155)], // Pizarra Académico
 ];
 
 /// Avatares ilustrados predefinidos por si el usuario quiere elegir uno rápido
@@ -845,9 +845,9 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         key: _formKey,
         child: Column(
           children: [
-            // Cabecera visual del modal con selector de foto y portada
+            // Cabecera visual del modal con vista previa en vivo en tiempo real
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+              padding: const EdgeInsets.fromLTRB(18, 14, 16, 14),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: gradient,
@@ -856,14 +856,17 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
                 ),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Avatar con botón de cámara en tiempo real
                       Stack(
                         children: [
                           ProfileAvatar(
                             profile: _previewProfile,
-                            radius: 34,
+                            radius: 36,
                           ),
                           Positioned(
                             bottom: 0,
@@ -871,14 +874,14 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
                             child: InkWell(
                               onTap: _uploadFromDevice,
                               child: Container(
-                                padding: const EdgeInsets.all(6),
+                                padding: const EdgeInsets.all(5),
                                 decoration: BoxDecoration(
                                   color: scheme.surface,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.camera_alt_rounded,
-                                  size: 16,
+                                  size: 15,
                                   color: scheme.primary,
                                 ),
                               ),
@@ -887,124 +890,283 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
                         ],
                       ),
                       const SizedBox(width: 14),
+
+                      // Vista previa en vivo del Nombre, Titular y Carrera
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _name.text.trim().isEmpty
-                                  ? 'Configura tu Perfil Universitario'
-                                  : _name.text.trim(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 19,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 6,
+                            Row(
                               children: [
-                                FilledButton.tonalIcon(
-                                  onPressed: _uploadFromDevice,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor:
-                                        Colors.black.withValues(alpha: 0.35),
-                                    foregroundColor: Colors.white,
-                                    visualDensity: VisualDensity.compact,
+                                Flexible(
+                                  child: Text(
+                                    _name.text.trim().isEmpty
+                                        ? 'Tu Nombre Completo'
+                                        : _name.text.trim(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1.2,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  icon: const Icon(
-                                    Icons.upload_rounded,
-                                    size: 16,
-                                  ),
-                                  label: const Text('Subir foto'),
                                 ),
-                                // Selector de color de portada
-                                for (var i = 0;
-                                    i < kBannerGradients.length;
-                                    i++)
-                                  GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _bannerPreset = i),
-                                    child: Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: LinearGradient(
-                                          colors: kBannerGradients[i],
-                                        ),
-                                        border: Border.all(
-                                          color: _bannerPreset == i
-                                              ? Colors.white
-                                              : Colors.white38,
-                                          width: _bannerPreset == i ? 2.5 : 1,
-                                        ),
-                                      ),
+                                if (_name.text.trim().isNotEmpty) ...[
+                                  const SizedBox(width: 5),
+                                  const Icon(
+                                    Icons.verified_rounded,
+                                    color: Colors.white,
+                                    size: 17,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+
+                            // Titular / Especialidad en vivo
+                            Text(
+                              _headline.text.trim().isEmpty
+                                  ? 'Titular o especialidad académica'
+                                  : _headline.text.trim(),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+
+                            // Píldoras de Carrera, Semestre y Sede en vivo
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.35),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '🎓 ${_career.text.trim().isEmpty ? "Carrera por definir" : _career.text.trim()} · Sem. ${_semester.text.trim().isEmpty ? "1" : _semester.text.trim()}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.25),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '📍 $_campus',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ],
                         ),
                       ),
+
                       if (!widget.isEmbedded)
                         IconButton.filledTonal(
                           onPressed: () => Navigator.of(context).pop(false),
-                          icon: const Icon(Icons.close_rounded),
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  // Selector rápido de avatares ilustrados
-                  SizedBox(
-                    height: 36,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 8),
-                            child: Text(
-                              'O elige un avatar:',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
+
+                  // Fila de etiquetas en vivo adicionales (Disponibilidad, Diplomados, Skills, Contacto)
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '⚡ $_availability',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (_diplomas.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '🏅 ${_diplomas.length} diplomado${_diplomas.length == 1 ? "" : "s"}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        for (final emoji in kPresetAvatarEmojis)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: InkWell(
-                              onTap: () => setState(() {
-                                _avatarUrl = emoji;
-                                _photoBytes = null;
-                              }),
-                              borderRadius: BorderRadius.circular(999),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _avatarUrl == emoji
-                                      ? Colors.white
-                                      : Colors.black.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  emoji,
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
+                      if (_skills.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '✨ ${_skills.length} skills',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                      if (_contact.text.trim().isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '💬 ${_channel.label}: ${_contact.text.trim()}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Barra de progreso de completitud del perfil en tiempo real
+                  Row(
+                    children: [
+                      Text(
+                        'Perfil al ${(_previewProfile.completeness * 100).round()}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: _previewProfile.completeness,
+                            minHeight: 5,
+                            backgroundColor: Colors.black.withValues(alpha: 0.25),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Selector rápido de avatares ilustrados y botón de subir foto
+                  Row(
+                    children: [
+                      FilledButton.tonalIcon(
+                        onPressed: _uploadFromDevice,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.black.withValues(alpha: 0.35),
+                          foregroundColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                        ),
+                        icon: const Icon(Icons.upload_rounded, size: 15),
+                        label: const Text('Subir foto', style: TextStyle(fontSize: 11.5)),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SizedBox(
+                          height: 32,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              for (final emoji in kPresetAvatarEmojis)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: InkWell(
+                                    onTap: () => setState(() {
+                                      _avatarUrl = emoji;
+                                      _photoBytes = null;
+                                    }),
+                                    borderRadius: BorderRadius.circular(999),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _avatarUrl == emoji
+                                            ? Colors.white
+                                            : Colors.black.withValues(alpha: 0.25),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        emoji,
+                                        style: const TextStyle(fontSize: 15),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1104,6 +1266,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         const SizedBox(height: 14),
         TextFormField(
           controller: _headline,
+          onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
             labelText: 'Titular / Especialidad (cómo te defines)',
             hintText: 'Ej: Desarrollador Flutter · Semillero de IA',
@@ -1114,6 +1277,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         const SizedBox(height: 14),
         TextFormField(
           controller: _email,
+          onChanged: (_) => setState(() {}),
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
             labelText: 'Correo universitario',
@@ -1147,6 +1311,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         const SizedBox(height: 14),
         TextFormField(
           controller: _career,
+          onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
             labelText: 'Carrera / Programa académico',
             prefixIcon: Icon(Icons.school_outlined),
@@ -1194,6 +1359,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
               flex: 2,
               child: TextFormField(
                 controller: _semester,
+                onChanged: (_) => setState(() {}),
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Semestre',
@@ -1446,6 +1612,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         const SizedBox(height: 16),
         TextFormField(
           controller: _contact,
+          onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
             labelText: 'Dato de contacto (WhatsApp o Correo)',
             helperText: 'Solo se revela a las personas con quienes confirmes Match',
@@ -1459,6 +1626,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         const SizedBox(height: 16),
         TextFormField(
           controller: _portfolioUrl,
+          onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
             labelText: 'Enlace a Portafolio / GitHub / LinkedIn / Behance',
             hintText: 'Ej: github.com/mi-usuario',
@@ -1469,6 +1637,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         const SizedBox(height: 16),
         TextFormField(
           controller: _bio,
+          onChanged: (_) => setState(() {}),
           maxLines: 3,
           decoration: const InputDecoration(
             labelText: 'Sobre mí y qué puedo aportar a un equipo',

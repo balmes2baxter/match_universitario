@@ -19,7 +19,32 @@ class MatchScreen extends StatelessWidget {
     final campusMatches = appState.campusMatches;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Matches')),
+      appBar: AppBar(
+        title: const Text('Matches'),
+        actions: [
+          if (appState.hasProfile)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton.icon(
+                onPressed: () {
+                  appState.logout();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Sesión cerrada. Ahora estás como usuario nuevo.',
+                      ),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: const Text('Cerrar sesión'),
+              ),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [

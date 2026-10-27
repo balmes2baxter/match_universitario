@@ -419,6 +419,25 @@ class _HeroProfileHeaderCard extends StatelessWidget {
                                 : 'Configurar mi Perfil',
                           ),
                         ),
+                        if (hasProfile)
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              context.read<AppState>().logout();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Sesión cerrada. Ahora estás como usuario nuevo.',
+                                  ),
+                                ),
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: scheme.error,
+                              side: BorderSide(color: scheme.error),
+                            ),
+                            icon: const Icon(Icons.logout_rounded, size: 18),
+                            label: const Text('Cerrar sesión'),
+                          ),
                       ],
                     ),
                   ],

@@ -81,9 +81,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Cierra la sesión actual para volver a probar como visitante / usuario nuevo.
+  /// Cierra la sesión actual y reinicia las postulaciones de prueba del usuario
+  /// para volver a probar desde cero como visitante / usuario nuevo.
   void logout() {
     _currentUser = kDemoCurrentUser;
+    _posts
+      ..clear()
+      ..addAll(buildMockPostings());
     _rebuildDirectory();
     notifyListeners();
   }
