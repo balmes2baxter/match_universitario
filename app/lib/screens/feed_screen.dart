@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import '../models/posting.dart';
 import '../state/app_state.dart';
 import '../widgets/post_card.dart';
+import '../widgets/profile_modals.dart';
 import 'create_post_screen.dart';
 import 'landing_screen.dart';
-import 'profile_screen.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -126,13 +126,8 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Future<bool> _openProfileModal(BuildContext context) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => const ProfileScreen(popOnSave: true),
-      ),
-    );
-    return result ?? false;
+  Future<bool> _openProfileModal(BuildContext context) {
+    return showProfileEditorModal(context);
   }
 
   Future<void> _openCreatePost(BuildContext context) async {

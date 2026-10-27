@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../models/posting.dart';
 import '../state/app_state.dart';
-import '../screens/profile_screen.dart';
 import '../utils/time_ago.dart';
+import 'profile_modals.dart';
 
 class PostCard extends StatelessWidget {
   const PostCard({super.key, required this.posting});
@@ -30,45 +30,74 @@ class PostCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      child: Text(
-                        _initials(posting.authorName),
-                        style: TextStyle(
-                          color: theme.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () {
+                    final author = appState.profileById(posting.authorId);
+                    if (author != null) {
+                      showStudentProfileModal(
+                        context,
+                        author,
+                        isCurrentUser: isOwner,
+                        revealContact: posting.acceptedIds
+                            .contains(appState.currentUser.id),
+                      );
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                        child: Text(
+                          _initials(posting.authorName),
+                          style: TextStyle(
+                            color: theme.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            posting.authorName,
-                            style: theme.textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            '${posting.authorCareer} · ${timeAgo(posting.createdAt)}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    posting.authorName,
+                                    style: theme.textTheme.titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '· Ver perfil',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
+                            Text(
+                              '${posting.authorCareer} · ${timeAgo(posting.createdAt)}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    if (isOwner)
-                      Chip(
-                        visualDensity: VisualDensity.compact,
-                        avatar: const Icon(Icons.person_outline, size: 16),
-                        label: const Text('Tu publicación'),
-                      ),
-                  ],
+                      if (isOwner)
+                        Chip(
+                          visualDensity: VisualDensity.compact,
+                          avatar: const Icon(Icons.person_outline, size: 16),
+                          label: const Text('Tu publicación'),
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -182,12 +211,8 @@ class _Footer extends StatelessWidget {
   Future<void> _handleApply(BuildContext context) async {
     final appState = context.read<AppState>();
     if (!appState.hasProfile) {
-      final created = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(
-          builder: (_) => const ProfileScreen(popOnSave: true),
-        ),
-      );
-      if (created != true || !context.mounted) return;
+      final created = await showProfileEditorModal(context);
+      if (!created || !context.mounted) return;
     }
     appState.applyToPost(posting);
     ScaffoldMessenger.of(context).showSnackBar(
