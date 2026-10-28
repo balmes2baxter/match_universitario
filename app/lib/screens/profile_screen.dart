@@ -56,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
             actions: [
-              if (!hasProfile)
+              if (!hasProfile && appState.isMockEnabled)
                 TextButton.icon(
                   onPressed: () {
                     appState.registerOrUpdateProfile(

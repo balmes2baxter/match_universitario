@@ -1,18 +1,25 @@
 import 'package:flutter/foundation.dart';
 
+import '../config/environment.dart';
 import '../data/mock_data.dart';
 import '../models/posting.dart';
 import '../models/user_profile.dart';
 
 /// Estado global del MVP con datos en memoria.
-/// Arranca sin sesión iniciada (usuario nuevo) pero con convocatorias y matches
-/// activos en el campus para explorar y probar el flujo completo.
+/// En desarrollo (dev) arranca con convocatorias y matches de prueba.
+/// En producción (main) arranca completamente limpio sin datos mock.
 class AppState extends ChangeNotifier {
-  AppState() {
+  AppState({bool? enableMocks})
+      : _isMockEnabled = enableMocks ?? Environment.isMockEnabled {
     _currentUser = kDemoCurrentUser;
-    _posts.addAll(buildMockPostings());
+    if (_isMockEnabled) {
+      _posts.addAll(buildMockPostings());
+    }
     _rebuildDirectory();
   }
+
+  final bool _isMockEnabled;
+  bool get isMockEnabled => _isMockEnabled;
 
   late UserProfile _currentUser;
   final List<Posting> _posts = [];
@@ -57,8 +64,10 @@ class AppState extends ChangeNotifier {
     if (hasProfile) {
       _directory[_currentUser.id] = _currentUser;
     }
-    for (final u in kMockDirectory) {
-      _directory[u.id] = u;
+    if (_isMockEnabled) {
+      for (final u in kMockDirectory) {
+        _directory[u.id] = u;
+      }
     }
   }
 
@@ -81,13 +90,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Cierra la sesión actual y reinicia las postulaciones de prueba del usuario
-  /// para volver a probar desde cero como visitante / usuario nuevo.
+  /// Cierra la sesión actual y reinicia las publicaciones según el entorno.
   void logout() {
     _currentUser = kDemoCurrentUser;
-    _posts
-      ..clear()
-      ..addAll(buildMockPostings());
+    _posts.clear();
+    if (_isMockEnabled) {
+      _posts.addAll(buildMockPostings());
+    }
     _rebuildDirectory();
     notifyListeners();
   }
@@ -103,8 +112,9 @@ class AppState extends ChangeNotifier {
     final authorCareer = hasProfile ? _currentUser.career : 'Uniguajira';
     // En modo demo, pre-asignamos 1 estudiante interesado para que el usuario
     // nuevo pueda probar de inmediato el botón "Aceptar" en sus avisos.
+    // En producción inicia sin interesados simulados.
     final initialApplicants =
-        type == PostType.evento ? const <String>[] : const <String>['u1'];
+        (_isMockEnabled && type != PostType.evento) ? const <String>['u1'] : const <String>[];
     final post = Posting(
       id: 'p${DateTime.now().microsecondsSinceEpoch}',
       authorId: _currentUser.id,

@@ -1,0 +1,64 @@
+name: Deploy Production to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Permisos requeridos para desplegar a GitHub Pages con actions/deploy-pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Permite una sola ejecución simultánea de despliegue
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Instalar dependencias
+        run: |
+          cd app
+          flutter pub get
+
+      - name: Ejecutar pruebas unitarias y de widgets
+        run: |
+          cd app
+          flutter test
+
+      - name: Compilar Flutter Web para Producción (sin mocks)
+        run: |
+          cd app
+          flutter build web --release --base-href /match_universitario/ --dart-define=ENABLE_MOCKS=false
+          # Copia 404.html para soportar navegación directa y rutas en GitHub Pages
+          cp build/web/index.html build/web/404.html
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir artefacto web
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'app/build/web'
+
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

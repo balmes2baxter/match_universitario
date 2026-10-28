@@ -624,12 +624,14 @@ class _PendingApplicationCard extends StatelessWidget {
               color: scheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 12),
-          FilledButton.tonalIcon(
-            onPressed: () => appState.simulateAuthorAcceptsMe(posting),
-            icon: const Icon(Icons.bolt_rounded, size: 18),
-            label: const Text('Simular que me aceptan el Match'),
-          ),
+          if (appState.isMockEnabled) ...[
+            const SizedBox(height: 12),
+            FilledButton.tonalIcon(
+              onPressed: () => appState.simulateAuthorAcceptsMe(posting),
+              icon: const Icon(Icons.bolt_rounded, size: 18),
+              label: const Text('Simular que me aceptan el Match'),
+            ),
+          ],
         ],
       ),
     );

@@ -67,4 +67,21 @@ void main() {
     expect(state.feed.first.id, post.id);
     expect(state.myPostings.map((p) => p.id), contains(post.id));
   });
+
+  test('Modo producción arranca limpio sin datos mock y con 0 postulantes iniciales', () {
+    final prodState = AppState(enableMocks: false);
+    expect(prodState.isMockEnabled, isFalse);
+    expect(prodState.feed, isEmpty);
+    expect(prodState.campusMatches, isEmpty);
+    expect(prodState.confirmedMatches, isEmpty);
+
+    final post = prodState.addPost(
+      type: PostType.buscaEquipo,
+      title: 'Mi primera convocatoria real',
+      description: 'Buscando estudiante para semillero.',
+    );
+
+    expect(prodState.feed.length, 1);
+    expect(post.applicantCount, 0);
+  });
 }

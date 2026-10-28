@@ -482,13 +482,19 @@ class _FeedScreenState extends State<FeedScreen> {
 
                     // 5. LISTA DE TARJETAS (1 COLUMNA EN MÓVIL, 2 EN ESCRITORIO CON MAYOR ESPACIADO)
                     if (posts.isEmpty)
-                      _EmptyFeed(onResetFilters: () {
-                        setState(() {
-                          _filter = null;
-                          _careerFilter = null;
-                          _searchCtrl.clear();
-                        });
-                      })
+                      _EmptyFeed(
+                        isFiltered: _searchCtrl.text.isNotEmpty ||
+                            _filter != null ||
+                            _careerFilter != null,
+                        onResetFilters: () {
+                          setState(() {
+                            _filter = null;
+                            _careerFilter = null;
+                            _searchCtrl.clear();
+                          });
+                        },
+                        onCreatePost: () => _openCreatePost(context),
+                      )
                     else
                       LayoutBuilder(
                         builder: (context, boxConstraints) {
@@ -657,12 +663,21 @@ class _CareerChip extends StatelessWidget {
 }
 
 class _EmptyFeed extends StatelessWidget {
-  const _EmptyFeed({this.onResetFilters});
+  const _EmptyFeed({
+    this.isFiltered = false,
+    this.onResetFilters,
+    this.onCreatePost,
+  });
 
+  final bool isFiltered;
   final VoidCallback? onResetFilters;
+  final VoidCallback? onCreatePost;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isCampusEmpty = !isFiltered;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -672,37 +687,47 @@ class _EmptyFeed extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.search_off_rounded,
+                isCampusEmpty ? Icons.campaign_rounded : Icons.search_off_rounded,
                 size: 40,
-                color: Theme.of(context).colorScheme.primary,
+                color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
-              'No se encontraron avisos',
-              style: TextStyle(
+            Text(
+              isCampusEmpty
+                  ? 'Aún no hay publicaciones en el campus'
+                  : 'No se encontraron avisos',
+              style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Intenta buscar con otras palabras o cambiar de carrera.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
-            if (onResetFilters != null) ...[
-              const SizedBox(height: 14),
+            const SizedBox(height: 6),
+            Text(
+              isCampusEmpty
+                  ? '¡Sé el primero en crear una búsqueda de equipo, grupo de estudio o evento!'
+                  : 'Intenta buscar con otras palabras o cambiar de carrera.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            if (isCampusEmpty && onCreatePost != null)
+              FilledButton.icon(
+                onPressed: onCreatePost,
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Publicar primera convocatoria'),
+              )
+            else if (onResetFilters != null)
               OutlinedButton.icon(
                 onPressed: onResetFilters,
                 icon: const Icon(Icons.refresh_rounded, size: 16),
                 label: const Text('Restablecer filtros'),
               ),
-            ],
           ],
         ),
       ),

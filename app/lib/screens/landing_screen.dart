@@ -567,7 +567,67 @@ class _InteractiveMatchDeck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (posting == null) return const SizedBox.shrink();
+    if (posting == null) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: const Color(0xFF1E1916),
+              border: Border.all(
+                color: const Color(0xFF382E29),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBBF24).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.campaign_rounded, color: Color(0xFFFBBF24), size: 28),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'El campus está listo',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Sé el primer estudiante en publicar una búsqueda de equipo, grupo de estudio o evento.',
+                  style: TextStyle(fontSize: 14, color: Color(0xFFC7BDB5), height: 1.4),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: onLike,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFBBF24),
+                      foregroundColor: const Color(0xFF1F1600),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const Icon(Icons.add_circle_outline_rounded),
+                    label: const Text('Ir al Tablero', style: TextStyle(fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     final p = posting!;
 
     return Center(
