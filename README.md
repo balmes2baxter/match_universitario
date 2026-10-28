@@ -1,7 +1,12 @@
-[match_universitario_mvp_readme.md](https://github.com/user-attachments/files/32961473/match_universitario_mvp_readme.md)
-# match_universitario# 🎓 Match Universitario
+# 🎓 Match Universitario - Universidad de La Guajira
 
-Match Universitario es una aplicación móvil diseñada para conectar estudiantes del mismo campus universitario. Permite encontrar compañeros con habilidades específicas de diferentes carreras para proyectos académicos, formar grupos de estudio y enterarse de eventos de la universidad de forma rápida y sencilla.
+[![Deploy Production to GitHub Pages](https://github.com/balmes2baxter/match_universitario/actions/workflows/deploy.yml/badge.svg)](https://github.com/balmes2baxter/match_universitario/actions/workflows/deploy.yml)
+[![Flutter](https://img.shields.io/badge/Flutter-Web-02569B?logo=flutter)](https://flutter.dev)
+[![License](https://img.shields.io/badge/Status-En%20Producci%C3%B3n-success)](https://balmes2baxter.github.io/match_universitario/)
+
+> 🌐 **App en Producción:** [https://balmes2baxter.github.io/match_universitario/](https://balmes2baxter.github.io/match_universitario/)
+
+Match Universitario es una aplicación web y móvil diseñada para conectar estudiantes del campus de la **Universidad de La Guajira**. Permite encontrar compañeros con habilidades específicas de diferentes carreras para proyectos académicos, formar grupos de estudio y enterarse de eventos de la universidad de forma rápida y sencilla.
 
 ## 🚀 Alcance del MVP (Producto Mínimo Viable)
 
@@ -63,6 +68,17 @@ La comunicación entre la app y el servidor será mediante peticiones HTTP simpl
 * `POST /posts` - Crear una nueva publicación.
 * `POST /match/apply` - Aplicar ("Me interesa") a una publicación.
 * `GET /match/my-matches` - Ver quién ha aplicado a mis publicaciones y los contactos revelados.
+
+---
+
+## 🌿 Flujo de Ramas y Despliegue Continuo (CI/CD)
+
+* **Rama `main` (Producción):**
+  * Desplegada automáticamente en [GitHub Pages](https://balmes2baxter.github.io/match_universitario/).
+  * Corre en modo producción limpio (sin datos mock).
+* **Rama `dev` (Desarrollo Local):**
+  * Para pruebas locales y nuevas funcionalidades (`http://localhost:8080`).
+  * Con datos mock activos para simulación de matches y perfiles.
 
 ---
 
