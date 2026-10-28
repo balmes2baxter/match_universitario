@@ -228,133 +228,112 @@ class _FeedScreenState extends State<FeedScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 1. AVISO PARA USUARIO NUEVO (ELEGANTE Y COMPACTO)
+                    // 1. AVISO PARA USUARIO NUEVO (DISCRETO, ELEGANTE Y COMPACTO)
                     if (!appState.hasProfile)
                       Container(
                         margin: const EdgeInsets.only(bottom: 14),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
-                          vertical: 12,
+                          vertical: 9,
                         ),
                         decoration: BoxDecoration(
                           color: scheme.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: scheme.primary.withValues(alpha: 0.35),
+                            color: scheme.primary.withValues(alpha: 0.3),
                           ),
                         ),
-                        child: LayoutBuilder(
-                          builder: (context, visitorConstraints) {
-                            final isVeryNarrow = visitorConstraints.maxWidth < 350;
-                            if (isVeryNarrow) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(7),
-                                        decoration: BoxDecoration(
-                                          color: scheme.primaryContainer,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.person_add_rounded,
-                                          size: 16,
-                                          color: scheme.onPrimaryContainer,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          'Explorando como visitante',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 13,
-                                            color: scheme.onSurface,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Crea tu perfil con carrera y diplomados para postularte.',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      color: scheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  FilledButton(
-                                    onPressed: () => _openProfileModal(context),
-                                    style: FilledButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                    ),
-                                    child: const Text('Crear mi perfil'),
-                                  ),
-                                ],
-                              );
-                            }
-                            return Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: scheme.primaryContainer,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.person_add_rounded,
-                                    size: 18,
-                                    color: scheme.onPrimaryContainer,
-                                  ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline_rounded,
+                              size: 17,
+                              color: scheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Modo visitante: crea tu perfil para postularte.',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: scheme.onSurface,
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Estás explorando como visitante',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 13,
-                                          color: scheme.onSurface,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Crea tu perfil con carrera y diplomados para postularte.',
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                FilledButton(
-                                  onPressed: () => _openProfileModal(context),
-                                  style: FilledButton.styleFrom(
-                                    visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 6,
-                                    ),
-                                  ),
-                                  child: const Text('Crear perfil'),
-                                ),
-                              ],
-                            );
-                          },
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => _openProfileModal(context),
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                              child: const Text(
+                                'Crear perfil',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
-                    // 2. FILTRO POR CATEGORÍA (SCROLL HORIZONTAL NATURAL EN MÓVIL)
+                    // 2. BARRA DE BÚSQUEDA MODERNA Y ESPACIOSA
+                    TextField(
+                      controller: _searchCtrl,
+                      onChanged: (_) => setState(() {}),
+                      style: const TextStyle(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Buscar proyectos, materias, habilidades...',
+                        hintStyle: TextStyle(
+                          fontSize: 13.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          size: 20,
+                          color: scheme.primary,
+                        ),
+                        suffixIcon: _searchCtrl.text.isEmpty
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.close_rounded, size: 18),
+                                onPressed: () {
+                                  _searchCtrl.clear();
+                                  setState(() {});
+                                },
+                              ),
+                        isDense: true,
+                        filled: true,
+                        fillColor: scheme.surface,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: scheme.outlineVariant.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: scheme.outlineVariant.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: scheme.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 3. FILTROS ORGANIZADOS EN UNA SOLA FILA HORIZONTAL NATURAL
                     SizedBox(
-                      height: 44,
+                      height: 38,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
@@ -395,95 +374,113 @@ class _FeedScreenState extends State<FeedScreen> {
                               () => _filter = PostType.evento,
                             ),
                           ),
+                          const SizedBox(width: 12),
+                          VerticalDivider(
+                            width: 1,
+                            thickness: 1,
+                            indent: 6,
+                            endIndent: 6,
+                            color: scheme.outlineVariant.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 12),
+                          _CareerChip(
+                            label: '🎓 Todas las carreras',
+                            selected: _careerFilter == null,
+                            onTap: () => setState(() => _careerFilter = null),
+                          ),
+                          for (final c in _popularCareers)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 6),
+                              child: _CareerChip(
+                                label: c,
+                                selected: _careerFilter == c,
+                                onTap: () => setState(
+                                  () => _careerFilter =
+                                      (_careerFilter == c ? null : c),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
-                    // 3. BARRA DE BÚSQUEDA Y CARRERAS RÁPIDAS
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: scheme.surface,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.65),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    // 4. CABECERA DE SECCIÓN CON RESPIRO Y SEPARADOR VISUAL
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10, bottom: 12),
+                      child: Row(
                         children: [
-                          // Caja de búsqueda limpia
-                          TextField(
-                            controller: _searchCtrl,
-                            onChanged: (_) => setState(() {}),
-                            style: const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText: 'Buscar proyectos, materias, habilidades...',
-                              hintStyle: TextStyle(
-                                fontSize: 13.5,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search_rounded,
-                                size: 20,
+                          Text(
+                            _filter == null
+                                ? 'Convocatorias activas'
+                                : _filter!.label,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '${posts.length}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
                                 color: scheme.primary,
                               ),
-                              suffixIcon: _searchCtrl.text.isEmpty
-                                  ? null
-                                  : IconButton(
-                                      icon: const Icon(Icons.close_rounded, size: 18),
-                                      onPressed: () {
-                                        _searchCtrl.clear();
-                                        setState(() {});
-                                      },
-                                    ),
-                              isDense: true,
-                              filled: true,
-                              fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                borderSide: BorderSide.none,
-                              ),
                             ),
                           ),
-                          const SizedBox(height: 10),
-
-                          // Filtros de Carrera en chips horizontales táctiles
-                          SizedBox(
-                            height: 34,
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              children: [
-                                _CareerChip(
-                                  label: 'Todas las carreras',
-                                  selected: _careerFilter == null,
-                                  onTap: () => setState(() => _careerFilter = null),
+                          const Spacer(),
+                          if (_filter != null ||
+                              _careerFilter != null ||
+                              _searchCtrl.text.isNotEmpty)
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _filter = null;
+                                  _careerFilter = null;
+                                  _searchCtrl.clear();
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
                                 ),
-                                for (final c in _popularCareers)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 6),
-                                    child: _CareerChip(
-                                      label: c,
-                                      selected: _careerFilter == c,
-                                      onTap: () => setState(
-                                        () => _careerFilter = (_careerFilter == c ? null : c),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.filter_alt_off_rounded,
+                                      size: 14,
+                                      color: scheme.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Limpiar filtros',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: scheme.primary,
                                       ),
                                     ),
-                                  ),
-                              ],
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
 
-                    // 4. LISTA DE TARJETAS (1 COLUMNA EN MÓVIL, 2 EN ESCRITORIO)
+                    // 5. LISTA DE TARJETAS (1 COLUMNA EN MÓVIL, 2 EN ESCRITORIO CON MAYOR ESPACIADO)
                     if (posts.isEmpty)
                       _EmptyFeed(onResetFilters: () {
                         setState(() {
@@ -497,12 +494,12 @@ class _FeedScreenState extends State<FeedScreen> {
                         builder: (context, boxConstraints) {
                           final isWide = boxConstraints.maxWidth >= 820;
                           final cardWidth = isWide
-                              ? (boxConstraints.maxWidth - 16) / 2
+                              ? (boxConstraints.maxWidth - 18) / 2
                               : boxConstraints.maxWidth;
 
                           return Wrap(
-                            spacing: 16,
-                            runSpacing: 14,
+                            spacing: 18,
+                            runSpacing: 18,
                             children: [
                               for (final post in posts)
                                 SizedBox(
@@ -563,10 +560,10 @@ class _CategoryFilterPill extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFEA6A00) : scheme.surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected
                 ? const Color(0xFFEA6A00)

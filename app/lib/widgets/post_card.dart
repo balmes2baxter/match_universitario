@@ -35,30 +35,30 @@ class PostCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.65),
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
           width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         child: Material(
           color: Colors.transparent,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 1. CABECERA: Autor + Badge de Categoría + Hora
+                // 1. CABECERA: Autor + Categoría (ordenada y limpia)
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -79,11 +79,11 @@ class PostCard extends StatelessWidget {
                       child: author != null
                           ? ProfileAvatar(
                               profile: author,
-                              radius: 19,
+                              radius: 20,
                               showBorder: false,
                             )
                           : CircleAvatar(
-                              radius: 19,
+                              radius: 20,
                               backgroundColor: scheme.primaryContainer,
                               child: Text(
                                 _initials(posting.authorName),
@@ -95,7 +95,7 @@ class PostCard extends StatelessWidget {
                               ),
                             ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
 
                     // Nombre y Carrera
                     Expanded(
@@ -142,15 +142,15 @@ class PostCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
 
-                    // Tag de Categoría compacto
+                    // Badge de categoría distintivo y sobrio
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 10,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: accent.withValues(alpha: 0.3),
                           width: 1.0,
@@ -179,48 +179,48 @@ class PostCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // 2. TÍTULO
+                // 2. TÍTULO DE LA CONVOCATORIA
                 Text(
                   posting.title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
                     height: 1.25,
+                    letterSpacing: -0.2,
                   ),
                 ),
                 const SizedBox(height: 6),
 
-                // 3. DESCRIPCIÓN
+                // 3. DESCRIPCIÓN CON BUEN ESPACIADO
                 Text(
                   posting.description,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontSize: 13,
-                    height: 1.35,
+                    height: 1.4,
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 10),
 
-                // 4. METADATOS: Perfil buscado / Lugar del campus
-                if (posting.targetCareer != null || posting.location != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 4,
-                      children: [
-                        if (posting.targetCareer != null)
-                          Row(
+                // 4. METADATOS: Perfil buscado / Ubicación (simplificados, sin cajas anidadas)
+                if (posting.targetCareer != null || posting.location != null) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      if (posting.targetCareer != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
@@ -229,20 +229,28 @@ class PostCard extends StatelessWidget {
                                 color: scheme.primary,
                               ),
                               const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  'Busca: ${posting.targetCareer!}',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: scheme.onSurface,
-                                  ),
+                              Text(
+                                'Busca: ${posting.targetCareer!}',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: scheme.onSurface,
                                 ),
                               ),
                             ],
                           ),
-                        if (posting.location != null)
-                          Row(
+                        ),
+                      if (posting.location != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
@@ -251,23 +259,28 @@ class PostCard extends StatelessWidget {
                                 color: scheme.tertiary,
                               ),
                               const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  posting.location!,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: scheme.onSurface,
-                                  ),
+                              Text(
+                                posting.location!,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: scheme.onSurface,
                                 ),
                               ),
                             ],
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
+                ],
 
                 const SizedBox(height: 12),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: scheme.outlineVariant.withValues(alpha: 0.4),
+                ),
+                const SizedBox(height: 10),
 
                 // 5. PIE DE TARJETA: Tiempo + Postulados + Botón de Acción
                 Row(
