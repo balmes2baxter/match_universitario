@@ -188,15 +188,28 @@ class _TopNavBar extends StatelessWidget {
         return Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 38,
+              height: 38,
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFFEA6A00),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFEA6A00).withValues(alpha: 0.6),
+                  width: 1.2,
+                ),
               ),
-              child: const Icon(
-                Icons.school_rounded,
-                color: Colors.white,
-                size: 20,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/uniguajira_logo.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.school_rounded,
+                    color: Color(0xFFEA6A00),
+                    size: 20,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 10),
