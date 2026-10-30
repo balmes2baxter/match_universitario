@@ -1,11 +1,11 @@
 {
-    "name": "match_universitario_app",
-    "short_name": "match_universitario_app",
+    "name": "MatchUni · Universidad de La Guajira",
+    "short_name": "MatchUni",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FAF6F0",
+    "theme_color": "#EA6A00",
+    "description": "Conecta con estudiantes de la Universidad de La Guajira para proyectos de grado, grupos de estudio y eventos del campus.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

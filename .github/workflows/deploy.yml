@@ -44,10 +44,10 @@ jobs:
           cd app
           flutter test
 
-      - name: Compilar Flutter Web para Producción (sin mocks)
+      - name: Compilar Flutter Web para Demostración (plataforma alimentada, usuario nuevo)
         run: |
           cd app
-          flutter build web --release --base-href /match_universitario/ --dart-define=ENABLE_MOCKS=false
+          flutter build web --release --base-href /match_universitario/ --dart-define=ENABLE_MOCKS=true
           # Copia 404.html para soportar navegación directa y rutas en GitHub Pages
           cp build/web/index.html build/web/404.html
 

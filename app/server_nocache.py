@@ -1,5 +1,4 @@
 import http.server
-import socketserver
 import os
 import sys
 
@@ -13,11 +12,15 @@ class NoCacheHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Expires', '0')
         super().end_headers()
 
-Handler = NoCacheHTTPRequestHandler
+    def address_string(self):
+        return str(self.client_address[0])
+
 PORT = 8080
 
-socketserver.TCPServer.allow_reuse_address = True
-with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
-    print(f"Serving {web_dir} on 0.0.0.0:{PORT} with NO-CACHE headers...")
+class ReusableThreadingHTTPServer(http.server.ThreadingHTTPServer):
+    allow_reuse_address = True
+
+with ReusableThreadingHTTPServer(("0.0.0.0", PORT), NoCacheHTTPRequestHandler) as httpd:
+    print(f"Serving {web_dir} on 0.0.0.0:{PORT} (multithreaded, no-cache)...")
     sys.stdout.flush()
     httpd.serve_forever()

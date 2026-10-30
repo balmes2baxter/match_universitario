@@ -1,25 +1,37 @@
-import 'package:flutter/foundation.dart';
-
-/// Configuración de entorno de la aplicación.
-/// - En producción (rama main): corre sin datos mock (`ENABLE_MOCKS=false` o release).
-/// - En desarrollo local (rama dev): corre con datos mock para testing interactivo.
+/// Configuración de entorno y credenciales públicas de Supabase.
+///
+/// Las credenciales se pueden inyectar vía `--dart-define=SUPABASE_URL=...`
+/// y `--dart-define=SUPABASE_ANON_KEY=...` o asignarse directamente en las
+/// constantes por defecto una vez creado el proyecto en Supabase.
 abstract final class Environment {
   static const bool _hasMockOverride = bool.hasEnvironment('ENABLE_MOCKS');
   static const bool _mockOverride = bool.fromEnvironment('ENABLE_MOCKS');
 
-  /// Indica si los datos de prueba (mocks) están activos.
-  /// En modo debug / desarrollo local: `true`.
-  /// En modo release / producción: `false` (salvo override explícito).
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: '',
+  );
+
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+
+  /// Indica si hay una instancia de Supabase configurada.
+  static bool get isSupabaseConfigured =>
+      supabaseUrl.trim().isNotEmpty && supabaseAnonKey.trim().isNotEmpty;
+
+  /// Indica si los datos semilla (convocatorias y matches del campus) están activos.
   static bool get isMockEnabled {
     if (_hasMockOverride) {
       return _mockOverride;
     }
-    return kDebugMode;
+    return true;
   }
 
   /// Nombre del entorno actual.
-  static String get name => isMockEnabled ? 'development' : 'production';
+  static String get name => isSupabaseConfigured ? 'supabase_cloud' : 'demo_seeded';
 
-  /// Indica si estamos en producción real.
+  /// Indica si corre sin datos semilla.
   static bool get isProduction => !isMockEnabled;
 }

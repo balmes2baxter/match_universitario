@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 enum ContactChannel { whatsapp, email }
@@ -47,7 +48,7 @@ class UserProfile {
   final String contactValue;
   final String bio;
 
-  // Nuevos campos enriquecidos del perfil universitario
+  // Campos enriquecidos del perfil universitario
   final String headline;
   final String faculty;
   final String campus;
@@ -134,6 +135,7 @@ class UserProfile {
     );
   }
 
+  /// Serialización para almacenamiento local y APIs JSON camelCase.
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -153,33 +155,99 @@ class UserProfile {
         'languages': languages,
         'portfolioUrl': portfolioUrl,
         'avatarUrl': avatarUrl,
+        'photoBase64': (photoBytes != null && photoBytes!.isNotEmpty)
+            ? base64Encode(photoBytes!)
+            : null,
         'bannerPreset': bannerPreset,
       };
 
+  /// Serialización snake_case para la tabla `public.profiles` en Supabase / PostgreSQL.
+  Map<String, dynamic> toSupabaseRow() => {
+        'id': id,
+        'name': name,
+        'university_email': universityEmail,
+        'career': career,
+        'semester': semester,
+        'skills': skills,
+        'contact_channel': contactChannel.name,
+        'contact_value': contactValue,
+        'bio': bio,
+        'headline': headline,
+        'faculty': faculty,
+        'campus': campus,
+        'availability': availability,
+        'diplomas': diplomas,
+        'projects': projects,
+        'languages': languages,
+        'portfolio_url': portfolioUrl,
+        'avatar_url': avatarUrl,
+        'photo_base64': (photoBytes != null && photoBytes!.isNotEmpty)
+            ? base64Encode(photoBytes!)
+            : null,
+        'banner_preset': bannerPreset,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      };
+
+  /// Deserializa tanto desde JSON camelCase (local) como desde filas snake_case (Supabase).
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final rawChannel = (json['contact_channel'] ??
+            json['contactChannel'] ??
+            ContactChannel.whatsapp.name)
+        .toString();
+    final channel = ContactChannel.values.firstWhere(
+      (c) => c.name == rawChannel,
+      orElse: () => ContactChannel.whatsapp,
+    );
+
+    final rawPhotoBase64 =
+        (json['photo_base64'] ?? json['photoBase64']) as String?;
+    Uint8List? decodedPhoto;
+    if (rawPhotoBase64 != null && rawPhotoBase64.isNotEmpty) {
+      try {
+        decodedPhoto = base64Decode(rawPhotoBase64);
+      } catch (_) {
+        decodedPhoto = null;
+      }
+    }
+
     return UserProfile(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      universityEmail: json['universityEmail'] as String,
-      career: json['career'] as String,
-      semester: json['semester'] as int,
-      skills: (json['skills'] as List<dynamic>).cast<String>(),
-      contactChannel: ContactChannel.values
-          .firstWhere((c) => c.name == json['contactChannel']),
-      contactValue: json['contactValue'] as String,
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      universityEmail:
+          (json['university_email'] ?? json['universityEmail'] ?? '').toString(),
+      career: (json['career'] ?? '').toString(),
+      semester: (json['semester'] as num?)?.toInt() ?? 1,
+      skills:
+          (json['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+              const [],
+      contactChannel: channel,
+      contactValue:
+          (json['contact_value'] ?? json['contactValue'] ?? '').toString(),
       bio: (json['bio'] as String?) ?? '',
       headline: (json['headline'] as String?) ?? '',
       faculty: (json['faculty'] as String?) ?? 'Facultad de Ingeniería',
       campus: (json['campus'] as String?) ?? 'Sede Riohacha',
       availability:
           (json['availability'] as String?) ?? 'Disponible para Proyectos',
-      diplomas: (json['diplomas'] as List<dynamic>?)?.cast<String>() ?? const [],
-      projects: (json['projects'] as List<dynamic>?)?.cast<String>() ?? const [],
-      languages:
-          (json['languages'] as List<dynamic>?)?.cast<String>() ?? const ['Español'],
-      portfolioUrl: (json['portfolioUrl'] as String?) ?? '',
-      avatarUrl: json['avatarUrl'] as String?,
-      bannerPreset: (json['bannerPreset'] as int?) ?? 0,
+      diplomas: (json['diplomas'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      projects: (json['projects'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      languages: (json['languages'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const ['Español'],
+      portfolioUrl:
+          (json['portfolio_url'] ?? json['portfolioUrl'] ?? '').toString(),
+      avatarUrl: (json['avatar_url'] ?? json['avatarUrl']) as String?,
+      photoBytes: decodedPhoto,
+      bannerPreset:
+          ((json['banner_preset'] ?? json['bannerPreset']) as num?)?.toInt() ??
+              0,
     );
   }
 }

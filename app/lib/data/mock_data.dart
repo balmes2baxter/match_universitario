@@ -406,7 +406,8 @@ List<Posting> buildMockPostings() {
           'web en Flutter. Busco a alguien que domine widgets y animaciones.',
       targetCareer: 'Ingeniería de Sistemas',
       createdAt: now.subtract(const Duration(hours: 12)),
-      applicantIds: const ['u6'],
+      applicantIds: const ['u6', 'u13'],
+      acceptedIds: const ['u6'],
     ),
     Posting(
       id: 'p7',
@@ -421,7 +422,8 @@ List<Posting> buildMockPostings() {
       targetCareer: 'Administración de Empresas',
       location: 'Biblioteca, sala 6',
       createdAt: now.subtract(const Duration(hours: 6)),
-      applicantIds: const ['u3'],
+      applicantIds: const ['u3', 'u8'],
+      acceptedIds: const ['u3'],
     ),
     Posting(
       id: 'p8',
@@ -453,6 +455,7 @@ List<Posting> buildMockPostings() {
       location: 'Sala de estudio 2',
       createdAt: now.subtract(const Duration(hours: 20)),
       applicantIds: const ['u5', 'u1'],
+      acceptedIds: const ['u5'],
     ),
     Posting(
       id: 'p10',
@@ -493,6 +496,7 @@ List<Posting> buildMockPostings() {
       targetCareer: 'Diseño Gráfico',
       createdAt: now.subtract(const Duration(minutes: 45)),
       applicantIds: const ['u7', 'u9'],
+      acceptedIds: const ['u7'],
     ),
   ];
 }

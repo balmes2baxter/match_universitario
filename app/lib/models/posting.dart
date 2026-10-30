@@ -129,20 +129,58 @@ class Posting {
         'acceptedIds': acceptedIds,
       };
 
+  /// Serialización snake_case para la tabla `public.postings` en Supabase / PostgreSQL.
+  Map<String, dynamic> toSupabaseRow() => {
+        'id': id,
+        'author_id': authorId,
+        'author_name': authorName,
+        'author_career': authorCareer,
+        'type': type.name,
+        'title': title,
+        'description': description,
+        'target_career': targetCareer,
+        'location': location,
+        'applicant_ids': applicantIds,
+        'accepted_ids': acceptedIds,
+        'created_at': createdAt.toUtc().toIso8601String(),
+      };
+
+  /// Deserializa tanto desde JSON camelCase (local) como desde filas snake_case (Supabase).
   factory Posting.fromJson(Map<String, dynamic> json) {
+    final rawType = (json['type'] ?? PostType.buscaEquipo.name).toString();
+    final parsedType = PostType.values.firstWhere(
+      (t) => t.name == rawType,
+      orElse: () => PostType.buscaEquipo,
+    );
+
+    final rawCreatedAt =
+        (json['created_at'] ?? json['createdAt'])?.toString() ?? '';
+    final parsedCreatedAt =
+        DateTime.tryParse(rawCreatedAt)?.toLocal() ?? DateTime.now();
+
     return Posting(
-      id: json['id'] as String,
-      authorId: json['authorId'] as String,
-      authorName: json['authorName'] as String,
-      authorCareer: json['authorCareer'] as String,
-      type: PostType.values.firstWhere((t) => t.name == json['type']),
-      title: json['title'] as String,
-      description: json['description'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      targetCareer: json['targetCareer'] as String?,
+      id: (json['id'] ?? '').toString(),
+      authorId: (json['author_id'] ?? json['authorId'] ?? '').toString(),
+      authorName: (json['author_name'] ?? json['authorName'] ?? '').toString(),
+      authorCareer:
+          (json['author_career'] ?? json['authorCareer'] ?? '').toString(),
+      type: parsedType,
+      title: (json['title'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
+      createdAt: parsedCreatedAt,
+      targetCareer:
+          (json['target_career'] ?? json['targetCareer']) as String?,
       location: json['location'] as String?,
-      applicantIds: (json['applicantIds'] as List<dynamic>? ?? []).cast<String>(),
-      acceptedIds: (json['acceptedIds'] as List<dynamic>? ?? []).cast<String>(),
+      applicantIds: ((json['applicant_ids'] ?? json['applicantIds'])
+                  as List<dynamic>? ??
+              const [])
+          .map((e) => e.toString())
+          .toList(),
+      acceptedIds: ((json['accepted_ids'] ?? json['acceptedIds'])
+                  as List<dynamic>? ??
+              const [])
+          .map((e) => e.toString())
+          .toList(),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/posting.dart';
 import '../models/user_profile.dart';
 import '../state/app_state.dart';
+import '../utils/contact_launcher.dart';
 import '../widgets/profile_modals.dart';
 
 class MatchScreen extends StatelessWidget {
@@ -18,6 +19,10 @@ class MatchScreen extends StatelessWidget {
     final pendingApps = appState.pendingApplications;
     final matches = appState.confirmedMatches;
     final campusMatches = appState.campusMatches;
+
+    final hasPersonalActivity = myPostsWithApplicants.isNotEmpty ||
+        matches.isNotEmpty ||
+        pendingApps.isNotEmpty;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -71,6 +76,32 @@ class MatchScreen extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.only(bottom: 32),
             children: [
+              if (!hasPersonalActivity && campusMatches.isNotEmpty) ...[
+                // Si eres usuario nuevo sin actividad propia, mostramos primero
+                // los Matches activos de la comunidad para que veas la plataforma viva.
+                _SectionHeader(
+                  icon: Icons.groups_2_rounded,
+                  title: 'Matches activos en Uniguajira',
+                  badgeCount: campusMatches.length,
+                  subtitle:
+                      'Conexiones colaborativas recientes entre estudiantes del campus. ¡Postúlate en el Tablero para hacer el tuyo!',
+                ),
+                ...campusMatches.map(
+                  (post) => _CampusMatchCard(posting: post),
+                ),
+                const SizedBox(height: 16),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outlineVariant
+                      .withValues(alpha: 0.35),
+                ),
+              ],
+
               // 1. SOLICITUDES RECIBIDAS (INTERESADOS EN MIS CONVOCATORIAS)
               _SectionHeader(
                 icon: Icons.mark_email_unread_outlined,
@@ -154,28 +185,31 @@ class MatchScreen extends StatelessWidget {
                 ...pendingApps
                     .map((post) => _PendingApplicationCard(posting: post)),
 
-              const SizedBox(height: 16),
-              Divider(
-                height: 1,
-                thickness: 1,
-                indent: 16,
-                endIndent: 16,
-                color: Theme.of(context)
-                    .colorScheme
-                    .outlineVariant
-                    .withValues(alpha: 0.35),
-              ),
+              if (hasPersonalActivity && campusMatches.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 16,
+                  endIndent: 16,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outlineVariant
+                      .withValues(alpha: 0.35),
+                ),
 
-              // 4. ACTIVIDAD Y MATCHES EN EL CAMPUS
-              const _SectionHeader(
-                icon: Icons.groups_2_rounded,
-                title: 'Comunidad Uniguajira',
-                subtitle:
-                    'Matches y conexiones colaborativas recientes entre facultades.',
-              ),
-              ...campusMatches.map(
-                (post) => _CampusMatchCard(posting: post),
-              ),
+                // 4. ACTIVIDAD Y MATCHES EN EL CAMPUS
+                _SectionHeader(
+                  icon: Icons.groups_2_rounded,
+                  title: 'Comunidad Uniguajira',
+                  badgeCount: campusMatches.length,
+                  subtitle:
+                      'Matches y conexiones colaborativas recientes entre facultades.',
+                ),
+                ...campusMatches.map(
+                  (post) => _CampusMatchCard(posting: post),
+                ),
+              ],
             ],
           ),
         );
@@ -920,15 +954,7 @@ class _ContactBox extends StatelessWidget {
             ),
           ),
           FilledButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Abriendo ${profile.contactChannel.label}: ${profile.contactValue}',
-                  ),
-                ),
-              );
-            },
+            onPressed: () => launchDirectContact(context, profile),
             style: FilledButton.styleFrom(
               backgroundColor: isWhatsApp
                   ? const Color(0xFF10B981)

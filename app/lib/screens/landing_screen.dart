@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/posting.dart';
 import '../state/app_state.dart';
+import '../widgets/cloud_and_pwa_modals.dart';
 import 'home_shell.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -41,7 +42,7 @@ class _LandingScreenState extends State<LandingScreen> {
         posts.isEmpty ? null : posts[_previewIndex % posts.length];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF14110F),
+      backgroundColor: const Color(0xFFFAF6F0),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -61,7 +62,8 @@ class _LandingScreenState extends State<LandingScreen> {
                         _TopNavBar(
                           hasProfile: appState.hasProfile,
                           userName: appState.currentUser.name,
-                          onEnterBoard: () => _enterApp(context, initialIndex: 0),
+                          onEnterBoard: () =>
+                              _enterApp(context, initialIndex: 0),
                           onEnterProfile: () =>
                               _enterApp(context, initialIndex: 2),
                           onLogout: () {
@@ -77,7 +79,7 @@ class _LandingScreenState extends State<LandingScreen> {
                         ),
                         SizedBox(height: isMobile ? 24 : 36),
 
-                        // HERO PRINCIPAL (Colores sólidos estáticos + Tarjeta interactiva)
+                        // HERO PRINCIPAL (Modo Claro Institucional + Tarjeta interactiva)
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final isWide = constraints.maxWidth >= 860;
@@ -138,16 +140,18 @@ class _LandingScreenState extends State<LandingScreen> {
 
                         SizedBox(height: isMobile ? 32 : 44),
 
-                        // BENTO GRID CON COLORES ESTÁTICOS
+                        // BENTO GRID EN MODO CLARO
                         _BentoModesRow(
-                          onSelectMode: () => _enterApp(context, initialIndex: 0),
+                          onSelectMode: () =>
+                              _enterApp(context, initialIndex: 0),
                         ),
 
                         SizedBox(height: isMobile ? 20 : 28),
 
                         // BARRA DE MATCHES EN VIVO EN EL CAMPUS
                         _LiveMatchesStrip(
-                          onTapMatches: () => _enterApp(context, initialIndex: 1),
+                          onTapMatches: () =>
+                              _enterApp(context, initialIndex: 1),
                         ),
                         const SizedBox(height: 20),
                       ],
@@ -182,32 +186,39 @@ class _TopNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 600;
+        final isMobile = constraints.maxWidth < 820;
         final isTiny = constraints.maxWidth < 380;
 
         return Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 42,
+              height: 42,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: const Color(0xFFEA6A00).withValues(alpha: 0.6),
-                  width: 1.2,
+                  color: const Color(0xFFEA6A00).withValues(alpha: 0.45),
+                  width: 1.4,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(
                   'assets/images/uniguajira_logo.png',
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
+                  errorBuilder: (_, _, _) => const Icon(
                     Icons.school_rounded,
                     color: Color(0xFFEA6A00),
-                    size: 20,
+                    size: 22,
                   ),
                 ),
               ),
@@ -221,26 +232,25 @@ class _TopNavBar extends StatelessWidget {
                   const Text(
                     'MatchUni',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                      color: Color(0xFF1C140D),
+                      fontSize: 19,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -0.5,
                     ),
                   ),
                   if (!isTiny)
                     const Text(
-                      'Uniguajira',
+                      'Universidad de La Guajira',
                       style: TextStyle(
-                        color: Color(0xFFF59E0B),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFC2410C),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                 ],
               ),
             ),
             if (isMobile) ...[
-              // En móvil: botón de acceso directo a tablero + menú de opciones
               FilledButton.icon(
                 onPressed: onEnterBoard,
                 style: FilledButton.styleFrom(
@@ -263,10 +273,17 @@ class _TopNavBar extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                icon: const Icon(
+                  Icons.more_vert_rounded,
+                  color: Color(0xFF1C140D),
+                ),
                 onSelected: (val) {
                   if (val == 'profile') {
                     onEnterProfile();
+                  } else if (val == 'recover') {
+                    showLoginByEmailDialog(context);
+                  } else if (val == 'pwa') {
+                    showPwaAndCloudModal(context);
                   } else if (val == 'logout') {
                     onLogout();
                   }
@@ -282,14 +299,46 @@ class _TopNavBar extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (!hasProfile)
+                    const PopupMenuItem(
+                      value: 'recover',
+                      child: Row(
+                        children: [
+                          Icon(Icons.login_rounded, size: 18),
+                          SizedBox(width: 8),
+                          Text('Ya tengo perfil (entrar con correo)'),
+                        ],
+                      ),
+                    ),
+                  const PopupMenuItem(
+                    value: 'pwa',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.install_mobile_rounded,
+                          size: 18,
+                          color: Color(0xFFEA6A00),
+                        ),
+                        SizedBox(width: 8),
+                        Text('Instalar App en celular / Nube'),
+                      ],
+                    ),
+                  ),
                   if (hasProfile)
                     const PopupMenuItem(
                       value: 'logout',
                       child: Row(
                         children: [
-                          Icon(Icons.logout_rounded, size: 18, color: Colors.red),
+                          Icon(
+                            Icons.logout_rounded,
+                            size: 18,
+                            color: Colors.red,
+                          ),
                           SizedBox(width: 8),
-                          Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
+                          Text(
+                            'Cerrar sesión',
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ],
                       ),
                     ),
@@ -297,37 +346,74 @@ class _TopNavBar extends StatelessWidget {
               ),
             ] else ...[
               TextButton.icon(
+                onPressed: () => showPwaAndCloudModal(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFFC2410C),
+                ),
+                icon: const Icon(Icons.install_mobile_rounded, size: 18),
+                label: const Text(
+                  'Instalar App / Nube',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (!hasProfile)
+                TextButton.icon(
+                  onPressed: () => showLoginByEmailDialog(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF3E3025),
+                  ),
+                  icon: const Icon(Icons.login_rounded, size: 18),
+                  label: const Text(
+                    'Ya tengo perfil',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              TextButton.icon(
                 onPressed: onEnterProfile,
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFD6D1CD),
+                  foregroundColor: const Color(0xFF3E3025),
                 ),
                 icon: const Icon(Icons.person_outline_rounded, size: 18),
-                label: Text(hasProfile ? userName : 'Soy nuevo'),
+                label: Text(
+                  hasProfile ? userName : 'Soy nuevo',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
               if (hasProfile) ...[
                 const SizedBox(width: 4),
                 TextButton.icon(
                   onPressed: onLogout,
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFFF87171),
+                    foregroundColor: const Color(0xFFDC2626),
                   ),
                   icon: const Icon(Icons.logout_rounded, size: 17),
-                  label: const Text('Cerrar sesión'),
+                  label: const Text(
+                    'Cerrar sesión',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ],
               const SizedBox(width: 8),
               FilledButton.icon(
                 onPressed: onEnterBoard,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF26201D),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF1C140D),
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(999),
-                    side: const BorderSide(color: Color(0xFF3A312C)),
+                    side: const BorderSide(color: Color(0xFFDCCFC2)),
                   ),
                 ),
-                icon: const Icon(Icons.grid_view_rounded, size: 17),
-                label: const Text('Tablero'),
+                icon: const Icon(
+                  Icons.grid_view_rounded,
+                  size: 17,
+                  color: Color(0xFFEA6A00),
+                ),
+                label: const Text(
+                  'Tablero',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
             ],
           ],
@@ -359,13 +445,13 @@ class _HeroLeftPitch extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Badge sólido estático
+            // Badge institucional claro y legible
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
               decoration: BoxDecoration(
-                color: const Color(0xFF241D19),
+                color: const Color(0xFFFFF0DB),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: const Color(0xFF3D312A)),
+                border: Border.all(color: const Color(0xFFF6C68B)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -374,7 +460,7 @@ class _HeroLeftPitch extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF10B981),
+                      color: Color(0xFF059669),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -383,9 +469,9 @@ class _HeroLeftPitch extends StatelessWidget {
                     child: Text(
                       '$totalPosts convocatorias activas hoy · Uniguajira',
                       style: const TextStyle(
-                        color: Color(0xFFFBBF24),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF9A3412),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -395,25 +481,25 @@ class _HeroLeftPitch extends StatelessWidget {
             ),
             SizedBox(height: isMobile ? 16 : 22),
 
-            // Título adaptable
+            // Título en alto contraste para lectura cómoda
             Text(
               'Conecta.\nArma tu parche.\nHaz Match ya.',
               style: TextStyle(
                 fontSize: isMobile ? 34 : 54,
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
+                color: const Color(0xFF1C140D),
                 height: 1.08,
-                letterSpacing: -1.2,
+                letterSpacing: -1.1,
               ),
             ),
             SizedBox(height: isMobile ? 12 : 16),
 
             Text(
-              'Encuentra equipo para tesis, estudio o eventos en la Universidad de La Guajira. Un clic y directo al WhatsApp.',
+              'Encuentra compañeros para proyectos de grado, grupos de estudio o eventos académicos en la Universidad de La Guajira. Un clic y contacto directo por WhatsApp o correo.',
               style: TextStyle(
-                color: const Color(0xFFB8B0A8),
-                fontSize: isMobile ? 14.5 : 17,
-                height: 1.4,
+                color: const Color(0xFF4A3B31),
+                fontSize: isMobile ? 15 : 17.5,
+                height: 1.45,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -445,9 +531,9 @@ class _HeroLeftPitch extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onConfigureProfile,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: const Color(0xFF1F1A17),
-                      side: const BorderSide(color: Color(0xFF3A312C)),
+                      foregroundColor: const Color(0xFF1C140D),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFD6C7B8)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
@@ -490,9 +576,9 @@ class _HeroLeftPitch extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onConfigureProfile,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: const Color(0xFF1F1A17),
-                      side: const BorderSide(color: Color(0xFF3A312C)),
+                      foregroundColor: const Color(0xFF1C140D),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFD6C7B8)),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 22,
                         vertical: 18,
@@ -543,7 +629,7 @@ class _MiniMetric extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            color: Color(0xFFF59E0B),
+            color: Color(0xFFD95F02),
             fontSize: 22,
             fontWeight: FontWeight.w900,
           ),
@@ -552,9 +638,9 @@ class _MiniMetric extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            color: Color(0xFFD6D1CD),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+            color: Color(0xFF4A3B31),
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],
@@ -562,7 +648,7 @@ class _MiniMetric extends StatelessWidget {
   }
 }
 
-/// Tarjeta interactiva tipo "Swipe / Match" con colores sólidos y limpios.
+/// Tarjeta interactiva tipo "Swipe / Match" en modo claro limpio.
 class _InteractiveMatchDeck extends StatelessWidget {
   const _InteractiveMatchDeck({
     required this.posting,
@@ -588,11 +674,18 @@ class _InteractiveMatchDeck extends StatelessWidget {
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              color: const Color(0xFF1E1916),
+              color: Colors.white,
               border: Border.all(
-                color: const Color(0xFF382E29),
+                color: const Color(0xFFE6D8C9),
                 width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -601,10 +694,14 @@ class _InteractiveMatchDeck extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBBF24).withValues(alpha: 0.15),
+                    color: const Color(0xFFFFF0DB),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.campaign_rounded, color: Color(0xFFFBBF24), size: 28),
+                  child: const Icon(
+                    Icons.campaign_rounded,
+                    color: Color(0xFFEA6A00),
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -612,13 +709,17 @@ class _InteractiveMatchDeck extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: Color(0xFF1C140D),
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
                   'Sé el primer estudiante en publicar una búsqueda de equipo, grupo de estudio o evento.',
-                  style: TextStyle(fontSize: 14, color: Color(0xFFC7BDB5), height: 1.4),
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    color: Color(0xFF4A3B31),
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -626,13 +727,18 @@ class _InteractiveMatchDeck extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: onLike,
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFBBF24),
-                      foregroundColor: const Color(0xFF1F1600),
+                      backgroundColor: const Color(0xFFEA6A00),
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     icon: const Icon(Icons.add_circle_outline_rounded),
-                    label: const Text('Ir al Tablero', style: TextStyle(fontWeight: FontWeight.w800)),
+                    label: const Text(
+                      'Ir al Tablero',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ),
                 ),
               ],
@@ -653,11 +759,18 @@ class _InteractiveMatchDeck extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              color: const Color(0xFF1E1916),
+              color: Colors.white,
               border: Border.all(
-                color: const Color(0xFF382E29),
+                color: const Color(0xFFE6D8C9),
                 width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,14 +786,14 @@ class _InteractiveMatchDeck extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E2218),
+                        color: const Color(0xFFFFF0DB),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: const Color(0xFF573B22)),
+                        border: Border.all(color: const Color(0xFFF6C68B)),
                       ),
                       child: Text(
                         '${p.type.emoji} ${p.type.label}',
                         style: const TextStyle(
-                          color: Color(0xFFFBBF24),
+                          color: Color(0xFF9A3412),
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                         ),
@@ -689,9 +802,9 @@ class _InteractiveMatchDeck extends StatelessWidget {
                     Text(
                       '${(currentIndex % math.max(total, 1)) + 1}/$total en vivo',
                       style: const TextStyle(
-                        color: Color(0xFF9E958E),
+                        color: Color(0xFF6E5D4F),
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -721,7 +834,7 @@ class _InteractiveMatchDeck extends StatelessWidget {
                           Text(
                             p.authorName,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF1C140D),
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
                             ),
@@ -729,9 +842,9 @@ class _InteractiveMatchDeck extends StatelessWidget {
                           Text(
                             p.authorCareer,
                             style: const TextStyle(
-                              color: Color(0xFFF59E0B),
+                              color: Color(0xFFC2410C),
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -747,7 +860,7 @@ class _InteractiveMatchDeck extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF1C140D),
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
                     height: 1.25,
@@ -759,9 +872,9 @@ class _InteractiveMatchDeck extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFFB8B0A8),
-                    fontSize: 13.5,
-                    height: 1.35,
+                    color: Color(0xFF4A3B31),
+                    fontSize: 14,
+                    height: 1.4,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -772,12 +885,12 @@ class _InteractiveMatchDeck extends StatelessWidget {
                     runSpacing: 6,
                     children: [
                       if (p.targetCareer != null)
-                        _DarkTag(
+                        _LightTag(
                           icon: Icons.school_rounded,
                           text: 'Busca: ${p.targetCareer!}',
                         ),
                       if (p.location != null)
-                        _DarkTag(
+                        _LightTag(
                           icon: Icons.place_rounded,
                           text: p.location!,
                         ),
@@ -793,16 +906,19 @@ class _InteractiveMatchDeck extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: onSkip,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFD6D1CD),
-                          backgroundColor: const Color(0xFF26201D),
-                          side: const BorderSide(color: Color(0xFF3A312C)),
+                          foregroundColor: const Color(0xFF3E3025),
+                          backgroundColor: const Color(0xFFFAF6F0),
+                          side: const BorderSide(color: Color(0xFFD6C7B8)),
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                         icon: const Icon(Icons.refresh_rounded, size: 18),
-                        label: const Text('Otro aviso'),
+                        label: const Text(
+                          'Otro aviso',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -818,7 +934,10 @@ class _InteractiveMatchDeck extends StatelessWidget {
                           ),
                         ),
                         icon: const Icon(Icons.favorite_rounded, size: 18),
-                        label: const Text('Me interesa'),
+                        label: const Text(
+                          'Me interesa',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
                       ),
                     ),
                   ],
@@ -832,8 +951,8 @@ class _InteractiveMatchDeck extends StatelessWidget {
   }
 }
 
-class _DarkTag extends StatelessWidget {
-  const _DarkTag({required this.icon, required this.text});
+class _LightTag extends StatelessWidget {
+  const _LightTag({required this.icon, required this.text});
 
   final IconData icon;
   final String text;
@@ -843,22 +962,22 @@ class _DarkTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFF28221E),
+        color: const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF3A312C)),
+        border: Border.all(color: const Color(0xFFFED7AA)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: const Color(0xFFF59E0B)),
+          Icon(icon, size: 14, color: const Color(0xFFC2410C)),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               text,
               style: const TextStyle(
-                color: Colors.white,
+                color: Color(0xFF431407),
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -879,7 +998,7 @@ class _BentoModesRow extends StatelessWidget {
       (
         emoji: '🛠️',
         title: 'Arma tu Equipo',
-        subtitle: 'Tesis, semilleros y hackathons entre facultades.',
+        subtitle: 'Tesis, semilleros y proyectos entre facultades.',
         accent: Color(0xFFEA6A00),
       ),
       (
@@ -891,7 +1010,7 @@ class _BentoModesRow extends StatelessWidget {
       (
         emoji: '🎉',
         title: 'Eventos Campus',
-        subtitle: 'Ferias, talleres y parches en Uniguajira.',
+        subtitle: 'Ferias, talleres y conferencias en Uniguajira.',
         accent: Color(0xFFE11D48),
       ),
     ];
@@ -917,8 +1036,15 @@ class _BentoModesRow extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      color: const Color(0xFF1E1916),
-                      border: Border.all(color: const Color(0xFF332B26)),
+                      color: Colors.white,
+                      border: Border.all(color: const Color(0xFFE6D8C9)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -927,7 +1053,7 @@ class _BentoModesRow extends StatelessWidget {
                           height: 50,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2A221E),
+                            color: const Color(0xFFFFF0DB),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Text(
@@ -943,7 +1069,7 @@ class _BentoModesRow extends StatelessWidget {
                               Text(
                                 c.title,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Color(0xFF1C140D),
                                   fontSize: 16.5,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -952,9 +1078,9 @@ class _BentoModesRow extends StatelessWidget {
                               Text(
                                 c.subtitle,
                                 style: const TextStyle(
-                                  color: Color(0xFFB8B0A8),
-                                  fontSize: 13,
-                                  height: 1.3,
+                                  color: Color(0xFF4A3B31),
+                                  fontSize: 13.5,
+                                  height: 1.35,
                                 ),
                               ),
                             ],
@@ -991,8 +1117,8 @@ class _LiveMatchesStrip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
-          color: const Color(0xFF1E1916),
-          border: Border.all(color: const Color(0xFF382E29)),
+          color: const Color(0xFFFFF7ED),
+          border: Border.all(color: const Color(0xFFFED7AA)),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -1006,7 +1132,7 @@ class _LiveMatchesStrip extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.handshake_rounded,
-                        color: Color(0xFFF59E0B),
+                        color: Color(0xFFEA6A00),
                         size: 18,
                       ),
                       SizedBox(width: 8),
@@ -1014,7 +1140,7 @@ class _LiveMatchesStrip extends StatelessWidget {
                         child: Text(
                           'Matches recientes: María (Diseño) 🤝 Alex (Sistemas) · Carlos 🤝 Andrés · Mateo 🤝 Andrés',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF1C140D),
                             fontWeight: FontWeight.w700,
                             fontSize: 12.5,
                           ),
@@ -1028,7 +1154,7 @@ class _LiveMatchesStrip extends StatelessWidget {
                     child: Text(
                       'Ver todos los Matches →',
                       style: TextStyle(
-                        color: Color(0xFFF59E0B),
+                        color: Color(0xFFC2410C),
                         fontWeight: FontWeight.w800,
                         fontSize: 12,
                       ),
@@ -1037,29 +1163,29 @@ class _LiveMatchesStrip extends StatelessWidget {
                 ],
               );
             }
-            return Row(
+            return const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.handshake_rounded,
-                  color: Color(0xFFF59E0B),
+                  color: Color(0xFFEA6A00),
                   size: 20,
                 ),
-                const SizedBox(width: 10),
-                const Expanded(
+                SizedBox(width: 10),
+                Expanded(
                   child: Text(
                     'Matches recientes: María (Diseño) 🤝 Alex (Sistemas) · Carlos 🤝 Andrés · Mateo 🤝 Andrés',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF1C140D),
                       fontWeight: FontWeight.w700,
                       fontSize: 13.5,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                const Text(
+                SizedBox(width: 16),
+                Text(
                   'Ver todos los Matches →',
                   style: TextStyle(
-                    color: Color(0xFFF59E0B),
+                    color: Color(0xFFC2410C),
                     fontWeight: FontWeight.w800,
                     fontSize: 13.5,
                   ),

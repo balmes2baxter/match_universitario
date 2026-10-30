@@ -20,8 +20,8 @@ class MatchUniversitarioApp extends StatelessWidget {
         title: 'Match Universitario · Uniguajira',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.system,
+        darkTheme: AppTheme.light,
+        themeMode: ThemeMode.light,
         home: const LandingScreen(),
       ),
     );
