@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/posting.dart';
@@ -147,18 +148,30 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             const SizedBox(height: 20),
             TextFormField(
               controller: _titleController,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
                 labelText: 'Título',
+                hintText: 'Ej: Busco desarrollador Flutter para proyecto de grado',
                 border: OutlineInputBorder(),
               ),
               textInputAction: TextInputAction.next,
-              validator: (value) => (value == null || value.trim().length < 5)
-                  ? 'Escribe un título descriptivo'
-                  : null,
+              validator: (value) {
+                final t = value?.trim() ?? '';
+                if (t.length < 5) {
+                  return 'Escribe un título descriptivo (mínimo 5 caracteres)';
+                }
+                final letters =
+                    t.replaceAll(RegExp(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]'), '');
+                if (letters.length < 3) {
+                  return 'El título debe contener palabras, no solo números';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
                 labelText: 'Descripción',
                 alignLabelWithHint: true,
@@ -166,22 +179,45 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ),
               minLines: 3,
               maxLines: 6,
-              validator: (value) => (value == null || value.trim().length < 10)
-                  ? 'Cuéntanos un poco más (mínimo 10 caracteres)'
-                  : null,
+              validator: (value) {
+                final t = value?.trim() ?? '';
+                if (t.length < 10) {
+                  return 'Cuéntanos un poco más (mínimo 10 caracteres)';
+                }
+                final letters =
+                    t.replaceAll(RegExp(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]'), '');
+                if (letters.length < 5) {
+                  return 'La descripción debe incluir texto explicativo, no solo números';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             if (_type == PostType.evento)
               TextFormField(
                 controller: _locationController,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: const InputDecoration(
                   labelText: 'Lugar',
+                  hintText: 'Ej: Auditorio Principal - Sede Riohacha',
                   border: OutlineInputBorder(),
                 ),
+                validator: (value) {
+                  final t = value?.trim() ?? '';
+                  if (t.isEmpty) return null;
+                  if (RegExp(r'^\d+$').hasMatch(t)) {
+                    return 'Ingresa un lugar válido con letras';
+                  }
+                  return null;
+                },
               )
             else
               TextFormField(
                 controller: _targetCareerController,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+                ],
                 decoration: const InputDecoration(
                   labelText: 'Carrera objetivo (opcional)',
                   helperText: 'Ej: Ingeniería de Sistemas',

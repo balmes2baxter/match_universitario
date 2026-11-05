@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/user_profile.dart';
@@ -809,16 +809,128 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
     }
   }
 
-  void _saveProfile() {
-    if (!_formKey.currentState!.validate()) {
-      // Si hay campos requeridos vacíos en la pestaña 1, llevamos al usuario allí
-      if (_name.text.trim().isEmpty ||
-          _email.text.trim().isEmpty ||
-          _career.text.trim().isEmpty) {
-        _tabController.animateTo(0);
-      } else if (_contact.text.trim().isEmpty) {
-        _tabController.animateTo(2);
+  static String? _validateName(String? v) {
+    final t = v?.trim() ?? '';
+    if (t.isEmpty) return 'Escribe tu nombre completo';
+    if (RegExp(r'\d').hasMatch(t)) {
+      return 'El nombre no debe contener números';
+    }
+    final lettersOnly =
+        t.replaceAll(RegExp(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]'), '');
+    if (lettersOnly.length < 3) {
+      return 'Escribe un nombre válido (mínimo 3 letras)';
+    }
+    return null;
+  }
+
+  static String? _validateEmail(String? v) {
+    final t = v?.trim() ?? '';
+    if (t.isEmpty) return 'Escribe tu correo universitario';
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(t)) {
+      return 'Ingresa un correo válido (ej: usuario@uniguajira.edu.co)';
+    }
+    return null;
+  }
+
+  static String? _validateCareer(String? v) {
+    final t = v?.trim() ?? '';
+    if (t.isEmpty) return 'Escribe o selecciona tu carrera';
+    if (RegExp(r'\d').hasMatch(t)) {
+      return 'La carrera no debe contener números';
+    }
+    final lettersOnly =
+        t.replaceAll(RegExp(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]'), '');
+    if (lettersOnly.length < 3) {
+      return 'Ingresa una carrera académica válida';
+    }
+    return null;
+  }
+
+  static String? _validateSemester(String? v) {
+    final t = v?.trim() ?? '';
+    final n = int.tryParse(t);
+    if (n == null || n < 1 || n > 12) return '1 a 12';
+    return null;
+  }
+
+  static String? _validateContact(String? v, ContactChannel channel) {
+    final t = v?.trim() ?? '';
+    if (t.isEmpty) return 'Escribe un dato de contacto para tus Matches';
+    if (channel == ContactChannel.whatsapp) {
+      if (RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ@]').hasMatch(t)) {
+        return 'En WhatsApp ingresa solo números telefónicos';
       }
+      final digits = t.replaceAll(RegExp(r'\D'), '');
+      if (digits.length < 7 || digits.length > 15) {
+        return 'Ingresa un número válido (7 a 15 dígitos, ej: 3001234567)';
+      }
+    } else if (channel == ContactChannel.email) {
+      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$');
+      if (!emailRegex.hasMatch(t)) {
+        return 'Ingresa un correo de contacto válido';
+      }
+    }
+    return null;
+  }
+
+  static String? _validatePortfolio(String? v) {
+    final t = v?.trim() ?? '';
+    if (t.isEmpty) return null;
+    if (RegExp(r'^\d+$').hasMatch(t) || (!t.contains('.') && !t.startsWith('http'))) {
+      return 'Ingresa un enlace válido (ej: github.com/usuario)';
+    }
+    return null;
+  }
+
+  void _saveProfile() {
+    _formKey.currentState?.validate();
+
+    final nameErr = _validateName(_name.text);
+    final emailErr = _validateEmail(_email.text);
+    final careerErr = _validateCareer(_career.text);
+    final semErr = _validateSemester(_semester.text);
+    final contactErr = _validateContact(_contact.text, _channel);
+    final portfolioErr = _validatePortfolio(_portfolioUrl.text);
+
+    if (nameErr != null ||
+        emailErr != null ||
+        careerErr != null ||
+        semErr != null) {
+      _tabController.animateTo(0);
+      final firstMsg = nameErr ?? emailErr ?? careerErr ?? semErr!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _formKey.currentState?.validate();
+      });
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Revisa la pestaña 1: $firstMsg'),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 72),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      return;
+    }
+
+    if (contactErr != null || portfolioErr != null) {
+      _tabController.animateTo(2);
+      final firstMsg = contactErr ?? portfolioErr!;
+      Future.delayed(const Duration(milliseconds: 320), () {
+        if (mounted) _formKey.currentState?.validate();
+      });
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Completa la pestaña 3 (Match & Contacto): $firstMsg'),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 72),
+            duration: const Duration(seconds: 3),
+          ),
+        );
       return;
     }
 
@@ -972,7 +1084,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    '🎓 ${_career.text.trim().isEmpty ? "Carrera por definir" : _career.text.trim()} · Sem. ${_semester.text.trim().isEmpty ? "1" : _semester.text.trim()}',
+                                    '🎓 ${_career.text.trim().isEmpty ? "Carrera por definir" : _career.text.trim()} · Sem. ${int.tryParse(_semester.text.trim())?.clamp(1, 12) ?? 1}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11.5,
@@ -1302,13 +1414,18 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         TextFormField(
           controller: _name,
           onChanged: (_) => setState(() {}),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          inputFormatters: [
+            FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+            LengthLimitingTextInputFormatter(80),
+          ],
           decoration: const InputDecoration(
             labelText: 'Nombre completo',
+            hintText: 'Ej: Camila Márquez Pushaina',
             prefixIcon: Icon(Icons.person_outline_rounded),
             border: OutlineInputBorder(),
           ),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Escribe tu nombre' : null,
+          validator: _validateName,
         ),
         const SizedBox(height: 14),
         TextFormField(
@@ -1325,6 +1442,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         TextFormField(
           controller: _email,
           onChanged: (_) => setState(() {}),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
             labelText: 'Correo universitario',
@@ -1332,12 +1450,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
             prefixIcon: Icon(Icons.alternate_email_rounded),
             border: OutlineInputBorder(),
           ),
-          validator: (v) {
-            final t = v?.trim() ?? '';
-            if (t.isEmpty) return 'Escribe tu correo';
-            if (!t.contains('@')) return 'Correo inválido';
-            return null;
-          },
+          validator: _validateEmail,
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<String>(
@@ -1359,13 +1472,17 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
         TextFormField(
           controller: _career,
           onChanged: (_) => setState(() {}),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          inputFormatters: [
+            FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+            LengthLimitingTextInputFormatter(80),
+          ],
           decoration: const InputDecoration(
             labelText: 'Carrera / Programa académico',
             prefixIcon: Icon(Icons.school_outlined),
             border: OutlineInputBorder(),
           ),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Escribe tu carrera' : null,
+          validator: _validateCareer,
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -1407,17 +1524,18 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
               child: TextFormField(
                 controller: _semester,
                 onChanged: (_) => setState(() {}),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(2),
+                ],
                 decoration: const InputDecoration(
-                  labelText: 'Semestre',
+                  labelText: 'Semestre (1-12)',
                   prefixIcon: Icon(Icons.onetwothree_rounded),
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) {
-                  final n = int.tryParse(v?.trim() ?? '');
-                  if (n == null || n < 1 || n > 12) return '1 a 12';
-                  return null;
-                },
+                validator: _validateSemester,
               ),
             ),
           ],
@@ -1653,33 +1771,67 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet>
               ),
           ],
           onChanged: (value) {
-            if (value != null) setState(() => _channel = value);
+            if (value != null) {
+              setState(() {
+                _channel = value;
+                if (_channel == ContactChannel.whatsapp &&
+                    RegExp(r'[a-zA-Z@]').hasMatch(_contact.text)) {
+                  _contact.clear();
+                } else if (_channel == ContactChannel.email &&
+                    _contact.text.trim().isEmpty &&
+                    _validateEmail(_email.text) == null) {
+                  _contact.text = _email.text.trim();
+                }
+              });
+            }
           },
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _contact,
           onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(
-            labelText: 'Dato de contacto (WhatsApp o Correo)',
-            helperText: 'Solo se revela a las personas con quienes confirmes Match',
-            prefixIcon: Icon(Icons.phone_android_rounded),
-            border: OutlineInputBorder(),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          keyboardType: _channel == ContactChannel.whatsapp
+              ? TextInputType.phone
+              : TextInputType.emailAddress,
+          inputFormatters: _channel == ContactChannel.whatsapp
+              ? [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-\s()]')),
+                  LengthLimitingTextInputFormatter(20),
+                ]
+              : [
+                  LengthLimitingTextInputFormatter(100),
+                ],
+          decoration: InputDecoration(
+            labelText: _channel == ContactChannel.whatsapp
+                ? 'Número de WhatsApp (solo dígitos)'
+                : 'Correo electrónico de contacto',
+            hintText: _channel == ContactChannel.whatsapp
+                ? 'Ej: +57 300 123 4567'
+                : 'Ej: usuario@uniguajira.edu.co',
+            helperText:
+                'Solo se revela a las personas con quienes confirmes Match',
+            prefixIcon: Icon(
+              _channel == ContactChannel.whatsapp
+                  ? Icons.phone_android_rounded
+                  : Icons.alternate_email_rounded,
+            ),
+            border: const OutlineInputBorder(),
           ),
-          validator: (v) => (v == null || v.trim().isEmpty)
-              ? 'Escribe un dato de contacto'
-              : null,
+          validator: (v) => _validateContact(v, _channel),
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _portfolioUrl,
           onChanged: (_) => setState(() {}),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           decoration: const InputDecoration(
-            labelText: 'Enlace a Portafolio / GitHub / LinkedIn / Behance',
+            labelText: 'Enlace a Portafolio / GitHub / LinkedIn / Behance (opcional)',
             hintText: 'Ej: github.com/mi-usuario',
             prefixIcon: Icon(Icons.link_rounded),
             border: OutlineInputBorder(),
           ),
+          validator: _validatePortfolio,
         ),
         const SizedBox(height: 16),
         TextFormField(

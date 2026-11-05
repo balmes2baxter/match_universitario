@@ -89,10 +89,17 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
 
       // 1. Verificar si vienen credenciales de Supabase por URL (?supa_url=...&supa_key=...)
+      //    o si se solicitó modo de pruebas estrictamente local (?local_only=1)
       final queryParams = Uri.base.queryParameters;
+      final isLocalOnly = queryParams['local_only'] == '1' ||
+          queryParams['local_only'] == 'true';
       final urlParam = queryParams['supa_url']?.trim();
       final keyParam = queryParams['supa_key']?.trim();
-      if (urlParam != null &&
+      if (isLocalOnly) {
+        _cloudUrl = '';
+        _cloudAnonKey = '';
+        _supabase = SupabaseService(baseUrl: '', anonKey: '');
+      } else if (urlParam != null &&
           urlParam.isNotEmpty &&
           keyParam != null &&
           keyParam.isNotEmpty) {
@@ -105,7 +112,7 @@ class AppState extends ChangeNotifier {
         _cloudAnonKey = prefs.getString(_kSupabaseAnonKey) ?? '';
       }
 
-      if (_cloudUrl.isNotEmpty && _cloudAnonKey.isNotEmpty) {
+      if (!isLocalOnly && _cloudUrl.isNotEmpty && _cloudAnonKey.isNotEmpty) {
         _supabase = SupabaseService(
           baseUrl: _cloudUrl,
           anonKey: _cloudAnonKey,

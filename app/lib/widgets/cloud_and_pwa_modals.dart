@@ -66,6 +66,12 @@ Future<void> showLoginByEmailDialog(BuildContext context) async {
                           setState(() => errorText = 'Ingresa tu correo');
                           return;
                         }
+                        if (!RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$')
+                            .hasMatch(email)) {
+                          setState(() => errorText =
+                              'Ingresa un correo válido (ej: usuario@uniguajira.edu.co)');
+                          return;
+                        }
                         setState(() {
                           isLoading = true;
                           errorText = null;
