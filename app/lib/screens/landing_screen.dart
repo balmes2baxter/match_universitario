@@ -17,6 +17,28 @@ class LandingScreen extends StatefulWidget {
 
 class _LandingScreenState extends State<LandingScreen> {
   int _previewIndex = 0;
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!mounted) return;
+    setState(() {
+      _scrollOffset = _scrollController.offset;
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _enterApp(BuildContext context, {int initialIndex = 0}) {
     Navigator.of(context).pushReplacement(
@@ -49,6 +71,7 @@ class _LandingScreenState extends State<LandingScreen> {
           builder: (context, constraints) {
             final isMobile = constraints.maxWidth < 600;
             return SingleChildScrollView(
+              controller: _scrollController,
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1140),
@@ -93,6 +116,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                     child: _HeroLeftPitch(
                                       totalPosts: totalPosts,
                                       totalMatches: totalMatches,
+                                      scrollOffset: _scrollOffset,
                                       onStartMatch: () =>
                                           _enterApp(context, initialIndex: 0),
                                       onConfigureProfile: () =>
@@ -120,6 +144,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 _HeroLeftPitch(
                                   totalPosts: totalPosts,
                                   totalMatches: totalMatches,
+                                  scrollOffset: _scrollOffset,
                                   onStartMatch: () =>
                                       _enterApp(context, initialIndex: 0),
                                   onConfigureProfile: () =>
@@ -141,8 +166,9 @@ class _LandingScreenState extends State<LandingScreen> {
 
                         SizedBox(height: isMobile ? 28 : 40),
 
-                        // MURAL INTERACTIVO EN VIVO: MOSAICO 3D + PINES + ABANICO POLAROID
+                        // SECCIÓN NARRATIVA CON FOTOS GRANDES GIRADAS MIENTRAS SE EXPLICA EL LANDING
                         DynamicCampusShowcase(
+                          scrollOffset: _scrollOffset,
                           onExploreBoard: () =>
                               _enterApp(context, initialIndex: 0),
                         ),
@@ -438,12 +464,14 @@ class _HeroLeftPitch extends StatelessWidget {
     required this.totalMatches,
     required this.onStartMatch,
     required this.onConfigureProfile,
+    this.scrollOffset = 0.0,
   });
 
   final int totalPosts;
   final int totalMatches;
   final VoidCallback onStartMatch;
   final VoidCallback onConfigureProfile;
+  final double scrollOffset;
 
   @override
   Widget build(BuildContext context) {
@@ -619,8 +647,9 @@ class _HeroLeftPitch extends StatelessWidget {
             ),
             SizedBox(height: isMobile ? 16 : 22),
 
-            // Cápsula interactiva con mini-polaroids reales del campus
+            // Dúo de fotos grandes y giradas en el Hero
             CampusHeroPhotoCapsules(
+              scrollOffset: scrollOffset,
               onTapStory: (story) => showCampusPhotoLightbox(
                 context,
                 story: story,
