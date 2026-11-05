@@ -351,6 +351,161 @@ List<Posting> buildMockPostings() {
       ],
     ),
     Posting(
+      id: 'p_robotica',
+      authorId: 'u5',
+      authorName: 'Andrés Castillo',
+      authorCareer: 'Ingeniería de Sistemas',
+      type: PostType.buscaEquipo,
+      title: 'Prototipo de Rover Solar y Robótica con Arduino',
+      description:
+          'Estamos armando el prototipo de monitoreo ambiental con sensores '
+          'solares y Arduino en el laboratorio de electrónica. Buscamos 2 '
+          'compañeros para pruebas de campo y código embebido.',
+      targetCareer: 'Ingeniería de Sistemas / Electrónica / Ambiental',
+      location: 'Laboratorio de Robótica · Bloque de Ingeniería',
+      createdAt: now.subtract(const Duration(minutes: 25)),
+      applicantIds: const ['u2', 'u4', 'u10'],
+      acceptedIds: const ['u2', 'u4'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_rob_1',
+          name: 'match_robotica_solar.jpg',
+          kind: AttachmentKind.image,
+          mimeType: 'image/jpeg',
+          sizeBytes: 245000,
+          uploaderId: 'u5',
+          uploaderName: 'Andrés Castillo',
+          createdAt: now.subtract(const Duration(minutes: 25)),
+          url:
+              'https://mljrlfxhyjegrmqdbscp.supabase.co/storage/v1/object/public/match_attachments/p_robotica/match_robotica_solar.jpg',
+        ),
+      ],
+    ),
+    Posting(
+      id: 'p_wayuu_diseno',
+      authorId: 'u1',
+      authorName: 'María Fernanda Gómez',
+      authorCareer: 'Diseño Gráfico',
+      type: PostType.buscaEquipo,
+      title: 'Catálogo Fotográfico y Branding para Artesanías Wayuu',
+      description:
+          'Hacemos sesión de fotografía de producto y diseño editorial para '
+          'visibilizar mochilas y tejidos tradicionales de artesanas en '
+          'Riohacha. ¡Únete al equipo creativo y de e-commerce!',
+      targetCareer: 'Diseño Gráfico / Negocios / Comunicación',
+      location: 'Estudio de Fotografía y Diseño · Sede Riohacha',
+      createdAt: now.subtract(const Duration(minutes: 35)),
+      applicantIds: const ['u3', 'u6', 'u9'],
+      acceptedIds: const ['u3', 'u9'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_wayuu_1',
+          name: 'match_artesania_wayuu.jpg',
+          kind: AttachmentKind.image,
+          mimeType: 'image/jpeg',
+          sizeBytes: 262000,
+          uploaderId: 'u1',
+          uploaderName: 'María Fernanda Gómez',
+          createdAt: now.subtract(const Duration(minutes: 35)),
+          url:
+              'https://mljrlfxhyjegrmqdbscp.supabase.co/storage/v1/object/public/match_attachments/p_wayuu_diseno/match_artesania_wayuu.jpg',
+        ),
+      ],
+    ),
+    Posting(
+      id: 'p_estudio_calculo',
+      authorId: 'u10',
+      authorName: 'Mateo Herrera',
+      authorCareer: 'Ingeniería de Sistemas',
+      type: PostType.grupoEstudio,
+      title: 'Maratón de Estudio: Cálculo y Álgebra con Pizarra Llena',
+      description:
+          'Resolvemos talleres de integrales múltiples, series y ecuaciones '
+          'en grupo antes del parcial. Trae tus apuntes, marcadores y café, '
+          'explicamos paso a paso desde cero.',
+      targetCareer: 'Ingenierías',
+      location: 'Biblioteca Central · Sala de Estudio Grupal 3',
+      createdAt: now.subtract(const Duration(minutes: 50)),
+      applicantIds: const ['u2', 'u5', 'u8'],
+      acceptedIds: const ['u2', 'u8'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_calc_1',
+          name: 'match_estudio_pizarra.jpg',
+          kind: AttachmentKind.image,
+          mimeType: 'image/jpeg',
+          sizeBytes: 251000,
+          uploaderId: 'u10',
+          uploaderName: 'Mateo Herrera',
+          createdAt: now.subtract(const Duration(minutes: 50)),
+          url:
+              'https://mljrlfxhyjegrmqdbscp.supabase.co/storage/v1/object/public/match_attachments/p_estudio_calculo/match_estudio_pizarra.jpg',
+        ),
+      ],
+    ),
+    Posting(
+      id: 'p_biologia_manglar',
+      authorId: 'u4',
+      authorName: 'Valentina Pinto',
+      authorCareer: 'Ingeniería Ambiental',
+      type: PostType.evento,
+      title: 'Salida de Campo: Monitoreo de Manglares y Aves en Riohacha',
+      description:
+          'Este sábado realizamos toma de muestras de agua, medición de pH y '
+          'avistamiento de biodiversidad en el estuario del río Ranchería. '
+          'Abierto a semilleros y estudiantes de todas las carreras.',
+      targetCareer: 'Ingeniería Ambiental / Biología / Todas',
+      location: 'Delta del Río Ranchería · Salida Portería Uniguajira',
+      createdAt: now.subtract(const Duration(hours: 1, minutes: 10)),
+      applicantIds: const ['u7', 'u11', 'u12'],
+      acceptedIds: const ['u7', 'u12'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_mang_1',
+          name: 'match_manglar_campo.jpg',
+          kind: AttachmentKind.image,
+          mimeType: 'image/jpeg',
+          sizeBytes: 274000,
+          uploaderId: 'u4',
+          uploaderName: 'Valentina Pinto',
+          createdAt: now.subtract(const Duration(hours: 1, minutes: 10)),
+          url:
+              'https://mljrlfxhyjegrmqdbscp.supabase.co/storage/v1/object/public/match_attachments/p_biologia_manglar/match_manglar_campo.jpg',
+        ),
+      ],
+    ),
+    Posting(
+      id: 'p_musica_acustica',
+      authorId: 'u9',
+      authorName: 'Daniela Vargas',
+      authorCareer: 'Comunicación Social',
+      type: PostType.evento,
+      title: 'Ensayo de Grupo Musical Universitario y Tarde Acústica',
+      description:
+          'Armamos parche musical con guitarras acústicas, percusión y voces '
+          'para el festival cultural de Uniguajira. Si tocas algún instrumento '
+          'o te gusta cantar, ¡ven al ensayo en las zonas verdes!',
+      targetCareer: 'Todas las carreras',
+      location: 'Plazoleta Cultural · Bloque de Bienestar Universitario',
+      createdAt: now.subtract(const Duration(hours: 1, minutes: 30)),
+      applicantIds: const ['u1', 'u6', 'u13'],
+      acceptedIds: const ['u1', 'u6'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_mus_1',
+          name: 'match_musica_acustica.jpg',
+          kind: AttachmentKind.image,
+          mimeType: 'image/jpeg',
+          sizeBytes: 268000,
+          uploaderId: 'u9',
+          uploaderName: 'Daniela Vargas',
+          createdAt: now.subtract(const Duration(hours: 1, minutes: 30)),
+          url:
+              'https://mljrlfxhyjegrmqdbscp.supabase.co/storage/v1/object/public/match_attachments/p_musica_acustica/match_musica_acustica.jpg',
+        ),
+      ],
+    ),
+    Posting(
       id: 'p1',
       authorId: 'u1',
       authorName: 'María Fernanda Gómez',

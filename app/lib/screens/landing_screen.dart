@@ -6,6 +6,7 @@ import '../models/posting.dart';
 import '../state/app_state.dart';
 import '../widgets/cloud_and_pwa_modals.dart';
 import '../widgets/dynamic_campus_showcase.dart';
+import '../widgets/match_attachments_panel.dart';
 import 'home_shell.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -932,22 +933,29 @@ class _InteractiveMatchDeck extends StatelessWidget {
                     child: SizedBox(
                       height: 155,
                       width: double.infinity,
-                      child: (imgAtt.url ?? '')
-                              .contains('Clases_de_Arte_Uniguajira.jpg')
-                          ? Image.asset(
-                              'assets/images/clases_de_arte.jpg',
+                      child: Builder(
+                        builder: (_) {
+                          final localAsset =
+                              resolveBundledAttachmentAsset(imgAtt.url);
+                          if (localAsset != null) {
+                            return Image.asset(
+                              localAsset,
                               fit: BoxFit.cover,
-                            )
-                          : (imgAtt.url != null && imgAtt.url!.isNotEmpty)
-                              ? Image.network(
-                                  imgAtt.url!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => Image.asset(
-                                    'assets/images/clases_de_arte.jpg',
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                            );
+                          }
+                          if (imgAtt.url != null && imgAtt.url!.isNotEmpty) {
+                            return Image.network(
+                              imgAtt.url!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Image.asset(
+                                'assets/images/clases_de_arte.jpg',
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ),
                   ),
                 ],

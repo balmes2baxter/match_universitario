@@ -277,6 +277,26 @@ class _ActionUploadChip extends StatelessWidget {
   }
 }
 
+String? resolveBundledAttachmentAsset(String? url) {
+  if (url == null || url.isEmpty) return null;
+  if (url.contains('Clases_de_Arte_Uniguajira.jpg')) {
+    return 'assets/images/clases_de_arte.jpg';
+  }
+  const bundledNames = [
+    'match_robotica_solar.jpg',
+    'match_artesania_wayuu.jpg',
+    'match_estudio_pizarra.jpg',
+    'match_manglar_campo.jpg',
+    'match_musica_acustica.jpg',
+  ];
+  for (final name in bundledNames) {
+    if (url.contains(name)) {
+      return 'assets/images/$name';
+    }
+  }
+  return null;
+}
+
 class _FeaturedAttachmentBanner extends StatelessWidget {
   const _FeaturedAttachmentBanner({required this.attachment});
 
@@ -288,9 +308,10 @@ class _FeaturedAttachmentBanner extends StatelessWidget {
     if (bytes != null) {
       return Image.memory(bytes, fit: BoxFit.cover);
     }
-    if (url.contains('Clases_de_Arte_Uniguajira.jpg')) {
+    final localAsset = resolveBundledAttachmentAsset(url);
+    if (localAsset != null) {
       return Image.asset(
-        'assets/images/clases_de_arte.jpg',
+        localAsset,
         fit: BoxFit.cover,
         errorBuilder: (_, _, _) => Image.network(url, fit: BoxFit.cover),
       );
