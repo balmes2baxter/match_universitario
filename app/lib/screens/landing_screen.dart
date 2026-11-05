@@ -925,6 +925,32 @@ class _InteractiveMatchDeck extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
+                for (final imgAtt in p.attachments.where((a) => !a.isPdf).take(1)) ...[
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SizedBox(
+                      height: 155,
+                      width: double.infinity,
+                      child: (imgAtt.url ?? '')
+                              .contains('Clases_de_Arte_Uniguajira.jpg')
+                          ? Image.asset(
+                              'assets/images/clases_de_arte.jpg',
+                              fit: BoxFit.cover,
+                            )
+                          : (imgAtt.url != null && imgAtt.url!.isNotEmpty)
+                              ? Image.network(
+                                  imgAtt.url!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => Image.asset(
+                                    'assets/images/clases_de_arte.jpg',
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 if (p.targetCareer != null || p.location != null)

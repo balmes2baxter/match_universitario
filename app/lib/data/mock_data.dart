@@ -320,6 +320,37 @@ List<Posting> buildMockPostings() {
   final now = DateTime.now();
   return [
     Posting(
+      id: 'p_arte',
+      authorId: 'u6',
+      authorName: 'Camila Restrepo',
+      authorCareer: 'Diseño Gráfico',
+      type: PostType.evento,
+      title: 'Clases de arte y taller de pintura al aire libre',
+      description:
+          'Abrimos espacio creativo en el campus para aprender pintura al pastel, '
+          'ilustración botánica y dibujo libre en grupo. ¡Incluye materiales '
+          'básicos, ven con tu parche!',
+      targetCareer: 'Todas las carreras',
+      location: 'Zonas verdes · Plazoleta Central Uniguajira',
+      createdAt: now.subtract(const Duration(minutes: 15)),
+      applicantIds: const ['u1', 'u7', 'u9'],
+      acceptedIds: const ['u1', 'u9'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_arte_1',
+          name: 'Clases_de_Arte_Uniguajira.jpg',
+          kind: AttachmentKind.image,
+          mimeType: 'image/jpeg',
+          sizeBytes: 303835,
+          uploaderId: 'u6',
+          uploaderName: 'Camila Restrepo',
+          createdAt: now.subtract(const Duration(minutes: 15)),
+          url:
+              'https://mljrlfxhyjegrmqdbscp.supabase.co/storage/v1/object/public/match_attachments/p_arte/Clases_de_Arte_Uniguajira.jpg',
+        ),
+      ],
+    ),
+    Posting(
       id: 'p1',
       authorId: 'u1',
       authorName: 'María Fernanda Gómez',

@@ -149,6 +149,11 @@ class _MatchAttachmentsPanelState extends State<MatchAttachmentsPanel> {
           ),
           if (attachments.isNotEmpty) ...[
             const SizedBox(height: 8),
+            // Si hay imágenes adjuntas, mostrar vista previa visual destacada en la tarjeta
+            for (final imgAtt in attachments.where((a) => !a.isPdf).take(1)) ...[
+              _FeaturedAttachmentBanner(attachment: imgAtt),
+              const SizedBox(height: 8),
+            ],
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -266,6 +271,152 @@ class _ActionUploadChip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeaturedAttachmentBanner extends StatelessWidget {
+  const _FeaturedAttachmentBanner({required this.attachment});
+
+  final MatchAttachment attachment;
+
+  Widget _buildBannerImage() {
+    final bytes = attachment.bytes;
+    final url = attachment.url ?? '';
+    if (bytes != null) {
+      return Image.memory(bytes, fit: BoxFit.cover);
+    }
+    if (url.contains('Clases_de_Arte_Uniguajira.jpg')) {
+      return Image.asset(
+        'assets/images/clases_de_arte.jpg',
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => Image.network(url, fit: BoxFit.cover),
+      );
+    }
+    if (url.isNotEmpty) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => Image.asset(
+          'assets/images/clases_de_arte.jpg',
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680, maxHeight: 640),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.image_rounded,
+                          color: Color(0xFFEA6A00),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            attachment.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: _buildBannerImage(),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Subido por ${attachment.uploaderName} · ${attachment.formattedSize}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 195,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _buildBannerImage(),
+              Positioned(
+                right: 8,
+                bottom: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.zoom_out_map_rounded,
+                        color: Colors.white,
+                        size: 12,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Ampliar imagen',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
