@@ -146,9 +146,50 @@ const List<CampusStoryItem> kCampusStories = [
       ),
     ],
   ),
+  CampusStoryItem(
+    id: 'feria_coliseo_parche',
+    stepNumber: '03',
+    assetPath: 'assets/images/campus_feria_parche.jpg',
+    secondaryAssetPath: null,
+    categoryChip: '💡 Ferias, Emprendimiento & Coliseo',
+    title: 'De las ideas en clase a las ferias y dinámicas en el coliseo',
+    subtitle:
+        '¿Tienes un emprendimiento estudiantil, una dinámica de finanzas o necesitas compañeros para un stand en la próxima feria de Uniguajira? Publica tu convocatoria, suma talento de otras carreras y haz realidad tu proyecto.',
+    locationLabel: 'Coliseo Cubierto · Feria & Dinámica Estudiantil Uniguajira',
+    liveCounterLabel: '+19 proyectos y stands estudiantiles activos',
+    accentColor: Color(0xFF0F766E),
+    baseTiltDegrees: -3.4,
+    imageAlignment: Alignment(0.0, -0.15),
+    initialReactions: 54,
+    featureBullets: [
+      '🚀 Arma equipos entre Ingeniería, Administración, Diseño y más',
+      '📅 Difunde ferias, muestras empresariales y actividades en el coliseo',
+      '📎 Comparte el pitch o póster de tu stand en PDF o imagen',
+    ],
+    hotspots: [
+      CampusPhotoHotspot(
+        xAlign: 0.72,
+        yAlign: 0.46,
+        badge: '💡 Dinámica en Vivo',
+        title: 'Ferias Empresariales, Stands y Retos Prácticos',
+        detail:
+            'Conecta con compañeros para organizar actividades lúdicas, muestras de emprendimiento y proyectos aplicados.',
+        ctaLabel: 'Publicar mi proyecto',
+      ),
+      CampusPhotoHotspot(
+        xAlign: 0.26,
+        yAlign: 0.42,
+        badge: '🤝 Combo Universitario',
+        title: 'Participación Activa de Toda la Comunidad',
+        detail:
+            'Entérate al instante de qué está pasando hoy en el coliseo, auditorios y plazoletas del campus.',
+        ctaLabel: 'Ver eventos del campus',
+      ),
+    ],
+  ),
 ];
 
-/// Dúo de fotografías GRANDES y GIRADAS (estilo Polaroid Editorial) que aparece
+/// Trío de fotografías GRANDES y GIRADAS (estilo Abanico Polaroid Editorial) que aparece
 /// desde la parte superior del Hero y reacciona al scroll y al toque.
 class CampusHeroPhotoCapsules extends StatefulWidget {
   const CampusHeroPhotoCapsules({
@@ -172,32 +213,33 @@ class _CampusHeroPhotoCapsulesState extends State<CampusHeroPhotoCapsules> {
   Widget build(BuildContext context) {
     // Oscilación suave del giro mientras el usuario hace scroll por el Landing
     final scrollWave = math.sin(widget.scrollOffset / 160.0) * 0.025;
-    final leftAngle = (-0.085 + scrollWave).clamp(-0.14, -0.03);
-    final rightAngle = (0.080 - scrollWave).clamp(0.03, 0.14);
+    final leftAngle = (-0.095 + scrollWave).clamp(-0.15, -0.03);
+    final midAngle = (0.025 - scrollWave * 0.7).clamp(-0.05, 0.06);
+    final rightAngle = (0.095 - scrollWave).clamp(0.03, 0.15);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 520;
-        final stageHeight = isMobile ? 250.0 : 285.0;
+        final stageHeight = isMobile ? 255.0 : 290.0;
         final cardW = isMobile
-            ? (constraints.maxWidth * 0.56).clamp(185.0, 240.0)
-            : 265.0;
-        final cardH = isMobile ? 215.0 : 245.0;
+            ? (constraints.maxWidth * 0.50).clamp(170.0, 220.0)
+            : 235.0;
+        final cardH = isMobile ? 210.0 : 240.0;
 
         final card0 = Positioned(
-          left: isMobile ? 4 : 12,
-          top: 14,
+          left: isMobile ? 0 : 6,
+          top: 16,
           child: Transform.rotate(
-            angle: _frontCard == 0 ? leftAngle * 0.7 : leftAngle,
+            angle: _frontCard == 0 ? leftAngle * 0.65 : leftAngle,
             child: AnimatedScale(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutBack,
-              scale: _frontCard == 0 ? 1.04 : 0.95,
+              scale: _frontCard == 0 ? 1.05 : 0.93,
               child: _HeroTiltedBigCard(
                 story: kCampusStories[0],
                 width: cardW,
                 height: cardH,
-                badgeText: '🏛️ Patio & Escalera Uniguajira',
+                badgeText: '🏛️ Bloque & Semilleros',
                 isFront: _frontCard == 0,
                 onTap: () {
                   if (_frontCard != 0) {
@@ -213,19 +255,21 @@ class _CampusHeroPhotoCapsulesState extends State<CampusHeroPhotoCapsules> {
         );
 
         final card1 = Positioned(
-          right: isMobile ? 4 : 16,
-          top: 6,
+          left: isMobile
+              ? (constraints.maxWidth - cardW) / 2
+              : (constraints.maxWidth - cardW) / 2,
+          top: 4,
           child: Transform.rotate(
-            angle: _frontCard == 1 ? rightAngle * 0.7 : rightAngle,
+            angle: _frontCard == 1 ? midAngle * 0.5 : midAngle,
             child: AnimatedScale(
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeOutBack,
-              scale: _frontCard == 1 ? 1.04 : 0.95,
+              scale: _frontCard == 1 ? 1.05 : 0.94,
               child: _HeroTiltedBigCard(
                 story: kCampusStories[1],
                 width: cardW,
                 height: cardH,
-                badgeText: '🏅 Meta 5K · Parches Reales',
+                badgeText: '🏅 Meta 5K & Deporte',
                 isFront: _frontCard == 1,
                 onTap: () {
                   if (_frontCard != 1) {
@@ -240,6 +284,43 @@ class _CampusHeroPhotoCapsulesState extends State<CampusHeroPhotoCapsules> {
           ),
         );
 
+        final card2 = Positioned(
+          right: isMobile ? 0 : 6,
+          top: 18,
+          child: Transform.rotate(
+            angle: _frontCard == 2 ? rightAngle * 0.65 : rightAngle,
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutBack,
+              scale: _frontCard == 2 ? 1.05 : 0.93,
+              child: _HeroTiltedBigCard(
+                story: kCampusStories[2],
+                width: cardW,
+                height: cardH,
+                badgeText: '💡 Ferias & Coliseo',
+                isFront: _frontCard == 2,
+                onTap: () {
+                  if (_frontCard != 2) {
+                    setState(() => _frontCard = 2);
+                  } else {
+                    widget.onTapStory(kCampusStories[2]);
+                  }
+                },
+                onZoom: () => widget.onTapStory(kCampusStories[2]),
+              ),
+            ),
+          ),
+        );
+
+        final orderedStack = <Widget>[
+          if (_frontCard != 0) card0,
+          if (_frontCard != 1) card1,
+          if (_frontCard != 2) card2,
+          if (_frontCard == 0) card0,
+          if (_frontCard == 1) card1,
+          if (_frontCard == 2) card2,
+        ];
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -248,7 +329,7 @@ class _CampusHeroPhotoCapsulesState extends State<CampusHeroPhotoCapsules> {
               width: double.infinity,
               child: Stack(
                 clipBehavior: Clip.none,
-                children: _frontCard == 0 ? [card1, card0] : [card0, card1],
+                children: orderedStack,
               ),
             ),
             const SizedBox(height: 6),
@@ -265,7 +346,7 @@ class _CampusHeroPhotoCapsulesState extends State<CampusHeroPhotoCapsules> {
                 const SizedBox(width: 7),
                 const Expanded(
                   child: Text(
-                    'Toca cualquiera de las fotos giradas para traerla al frente o hacer Zoom HD',
+                    'Toca cualquiera de las 3 fotos giradas para traerla al frente o abrirla en Zoom HD',
                     style: TextStyle(
                       color: Color(0xFF6E5D4F),
                       fontSize: 12,
