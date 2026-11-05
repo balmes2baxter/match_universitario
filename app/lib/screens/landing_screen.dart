@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/posting.dart';
 import '../state/app_state.dart';
 import '../widgets/cloud_and_pwa_modals.dart';
+import '../widgets/dynamic_campus_showcase.dart';
 import 'home_shell.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -138,7 +139,15 @@ class _LandingScreenState extends State<LandingScreen> {
                           },
                         ),
 
-                        SizedBox(height: isMobile ? 32 : 44),
+                        SizedBox(height: isMobile ? 28 : 40),
+
+                        // MURAL INTERACTIVO EN VIVO: MOSAICO 3D + PINES + ABANICO POLAROID
+                        DynamicCampusShowcase(
+                          onExploreBoard: () =>
+                              _enterApp(context, initialIndex: 0),
+                        ),
+
+                        SizedBox(height: isMobile ? 24 : 34),
 
                         // BENTO GRID EN MODO CLARO
                         _BentoModesRow(
@@ -607,6 +616,16 @@ class _HeroLeftPitch extends StatelessWidget {
                 _MiniMetric(value: '$totalMatches', label: 'Matches hoy'),
                 const _MiniMetric(value: '100%', label: 'Directo a WhatsApp'),
               ],
+            ),
+            SizedBox(height: isMobile ? 16 : 22),
+
+            // Cápsula interactiva con mini-polaroids reales del campus
+            CampusHeroPhotoCapsules(
+              onTapStory: (story) => showCampusPhotoLightbox(
+                context,
+                story: story,
+                onExploreBoard: onStartMatch,
+              ),
             ),
           ],
         );
