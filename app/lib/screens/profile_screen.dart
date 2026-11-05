@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/mock_data.dart';
+import '../models/posting.dart';
 import '../models/user_profile.dart';
 import '../state/app_state.dart';
+import '../utils/contact_launcher.dart';
 import '../utils/photo_picker.dart';
 import '../widgets/profile_modals.dart';
+import 'create_post_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, this.popOnSave = false});
@@ -146,6 +149,10 @@ class ProfileScreen extends StatelessWidget {
 
                     // 2. FILA DE KPI / MÉTRICAS DEL ESTUDIANTE
                     _KpiMetricsRow(appState: appState, user: user),
+                    const SizedBox(height: 18),
+
+                    // 2.5 RESUMEN ORDENADO EN TU PERFIL: CREADOS, LIKES, MATCHES Y PERSONAS PARA CONECTAR
+                    _ProfileMatchesOverviewSection(appState: appState),
                     const SizedBox(height: 18),
 
                     // 3. GRID ESTRUCTURADO DE 2 COLUMNAS (ACADÉMICO / DIPLOMADOS / SKILLS / CONTACTO)
@@ -624,9 +631,9 @@ class _KpiMetricsRow extends StatelessWidget {
       ),
       (
         icon: Icons.handshake_outlined,
-        value: '${appState.confirmedMatches.length}',
+        value: '${appState.allMutualMatches.length}',
         label: 'Mis Matches',
-        caption: '${appState.myApplications.length} postulaciones enviadas',
+        caption: '${appState.myApplications.length} matches que te gustan',
       ),
     ];
 
@@ -1155,6 +1162,659 @@ class _AcademicAndContactCard extends StatelessWidget {
               color: scheme.onSurfaceVariant,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _ProfileMatchesOverviewSection extends StatelessWidget {
+  const _ProfileMatchesOverviewSection({required this.appState});
+
+  final AppState appState;
+
+  Future<void> _openCreateMatch(BuildContext context) async {
+    if (!appState.hasProfile) {
+      final ok = await showProfileEditorModal(context);
+      if (!ok || !context.mounted) return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+    );
+  }
+
+  Future<void> _handleLike(BuildContext context, Posting post) async {
+    if (!appState.hasProfile) {
+      final ok = await showProfileEditorModal(context);
+      if (!ok || !context.mounted) return;
+    }
+    appState.applyToPost(post);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('❤️ Añadiste "${post.title}" a los Matches que te gustan.'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final myCreated = appState.myPostings;
+    final myLiked = appState.myApplications;
+    final myConfirmed = appState.allMutualMatches;
+    final recommendedPosts = appState.recommendedPostings.take(3).toList();
+    final recommendedPeers = appState.recommendedPeers.take(4).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.hub_rounded,
+                      color: scheme.onPrimaryContainer,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tu Actividad de Matches y Conexiones',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          'Lo que has creado con tu cuenta, lo que te interesa, tus matches y con quién conectar.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              FilledButton.tonalIcon(
+                onPressed: () => _openCreateMatch(context),
+                icon: const Icon(Icons.add_circle_outline_rounded, size: 17),
+                label: const Text('Crear Match'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // 1. LO QUE HAS HECHO (MATCHES CREADOS CON TU CUENTA)
+          _OrderedSubHeader(
+            number: '1',
+            title: 'Matches que has creado con tu cuenta',
+            count: myCreated.length,
+            color: scheme.primary,
+            icon: Icons.post_add_rounded,
+          ),
+          const SizedBox(height: 8),
+          if (myCreated.isEmpty)
+            _CompactEmptyBox(
+              text:
+                  'Aún no has creado convocatorias con esta cuenta. Publica una para encontrar equipo o grupo de estudio.',
+              buttonLabel: 'Publicar ahora',
+              onTap: () => _openCreateMatch(context),
+            )
+          else
+            Column(
+              children: myCreated.map((post) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: scheme.primary.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        post.type.emoji,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              post.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13.5,
+                              ),
+                            ),
+                            Text(
+                              '${post.type.label} · ${post.applicantCount} interesado${post.applicantCount == 1 ? "" : "s"} · ${post.acceptedCount} aceptado${post.acceptedCount == 1 ? "" : "s"}',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          'Tu aviso',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: scheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+
+          const SizedBox(height: 14),
+
+          // 2. LO QUE TE INTERESA (MATCHES A LOS QUE LES DISTE LIKE)
+          _OrderedSubHeader(
+            number: '2',
+            title: 'Matches que te gustan (Tus Likes)',
+            count: myLiked.length,
+            color: const Color(0xFFEA6A00),
+            icon: Icons.favorite_rounded,
+          ),
+          const SizedBox(height: 8),
+          if (myLiked.isEmpty)
+            const _CompactEmptyBox(
+              text:
+                  'Todavía no has marcado "Me interesa" en ningún Match. Explora las sugerencias de abajo para dar tu primer Like.',
+            )
+          else
+            Column(
+              children: myLiked.map((post) {
+                final isMatched =
+                    post.acceptedIds.contains(appState.currentUser.id);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFFEA6A00).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.favorite_rounded,
+                        color: Color(0xFFEA6A00),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              post.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13.5,
+                              ),
+                            ),
+                            Text(
+                              'Por ${post.authorName} (${post.authorCareer})',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isMatched
+                              ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                              : const Color(0xFFEA6A00).withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          isMatched ? '¡Match!' : 'Te gusta',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: isMatched
+                                ? const Color(0xFF047857)
+                                : const Color(0xFFEA6A00),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+
+          const SizedBox(height: 14),
+
+          // 3. TUS MATCHES CONFIRMADOS (CONEXIÓN MUTUA)
+          _OrderedSubHeader(
+            number: '3',
+            title: 'Matches confirmados (¡Hicieron Match!)',
+            count: myConfirmed.length,
+            color: const Color(0xFF10B981),
+            icon: Icons.handshake_rounded,
+          ),
+          const SizedBox(height: 8),
+          if (myConfirmed.isEmpty)
+            const _CompactEmptyBox(
+              text:
+                  'Aún no tienes Matches mutuos confirmados. Cuando aceptes un interesado o te acepten, verás aquí su contacto directo.',
+            )
+          else
+            Column(
+              children: myConfirmed.map((post) {
+                final isOwner = appState.isOwner(post);
+                final partnerProfile = isOwner
+                    ? (appState.acceptedContactsFor(post).isNotEmpty
+                        ? appState.acceptedContactsFor(post).first
+                        : null)
+                    : appState.profileById(post.authorId);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.handshake_rounded,
+                        color: Color(0xFF047857),
+                        size: 19,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              post.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13.5,
+                              ),
+                            ),
+                            Text(
+                              partnerProfile != null
+                                  ? 'Conectado con ${partnerProfile.name} (${partnerProfile.contactValue})'
+                                  : 'Conexión mutua confirmada',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF047857),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (partnerProfile != null)
+                        FilledButton.tonalIcon(
+                          onPressed: () =>
+                              launchDirectContact(context, partnerProfile),
+                          style: FilledButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          icon: const Icon(Icons.chat_rounded, size: 14),
+                          label: const Text('Contactar'),
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+
+          const SizedBox(height: 14),
+
+          // 4. MATCHES Y PERSONAS QUE TE PUEDEN INTERESAR
+          _OrderedSubHeader(
+            number: '4',
+            title: 'Matches y personas que te pueden interesar',
+            count: recommendedPosts.length + recommendedPeers.length,
+            color: const Color(0xFF7C3AED),
+            icon: Icons.auto_awesome_rounded,
+          ),
+          const SizedBox(height: 8),
+          if (recommendedPosts.isNotEmpty) ...[
+            Column(
+              children: recommendedPosts.map((post) {
+                final score = appState.affinityScoreFor(post);
+                final reason = appState.affinityReasonFor(post);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        post.type.emoji,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    post.title,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13.5,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 1.5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF7C3AED)
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    '$score% afín',
+                                    style: const TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF7C3AED),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              '$reason · Por ${post.authorName}',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton.icon(
+                        onPressed: () => _handleLike(context, post),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFEA6A00),
+                          foregroundColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                        ),
+                        icon: const Icon(Icons.favorite_rounded, size: 13),
+                        label: const Text(
+                          'Me interesa',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+          if (recommendedPeers.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Personas afines para conectar en Uniguajira:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: recommendedPeers.map((peer) {
+                final score = appState.peerAffinityScore(peer);
+                return InkWell(
+                  onTap: () => showStudentProfileModal(context, peer),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ProfileAvatar(profile: peer, radius: 15),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              peer.name,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              '${peer.career} · $score% afín',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderedSubHeader extends StatelessWidget {
+  const _OrderedSubHeader({
+    required this.number,
+    required this.title,
+    required this.count,
+    required this.color,
+    required this.icon,
+  });
+
+  final String number;
+  final String title;
+  final int count;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                number,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(icon, size: 13, color: color),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CompactEmptyBox extends StatelessWidget {
+  const _CompactEmptyBox({
+    required this.text,
+    this.buttonLabel,
+    this.onTap,
+  });
+
+  final String text;
+  final String? buttonLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          if (buttonLabel != null && onTap != null) ...[
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: onTap,
+              child: Text(buttonLabel!),
+            ),
+          ],
         ],
       ),
     );

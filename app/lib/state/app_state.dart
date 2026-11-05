@@ -80,6 +80,135 @@ class AppState extends ChangeNotifier {
       .where((p) => p.acceptedIds.contains(_currentUser.id))
       .toList();
 
+  /// Mis propias convocatorias donde ya acepté al menos a un estudiante (Match mutuo).
+  List<Posting> get myPostingsWithAcceptedMatches =>
+      myPostings.where((p) => p.acceptedCount > 0).toList();
+
+  /// Todos los Matches confirmados de mi cuenta (donde me aceptaron o donde yo acepté).
+  List<Posting> get allMutualMatches {
+    final byId = <String, Posting>{};
+    for (final p in confirmedMatches) {
+      byId[p.id] = p;
+    }
+    for (final p in myPostingsWithAcceptedMatches) {
+      byId[p.id] = p;
+    }
+    final list = byId.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
+  }
+
+  /// Calcula el porcentaje de afinidad (68% - 98%) entre el usuario actual y un Match.
+  int affinityScoreFor(Posting post) {
+    int score = 70;
+    final myCareer = _currentUser.career.trim().toLowerCase();
+    final target = (post.targetCareer ?? '').trim().toLowerCase();
+    final authorCareer = post.authorCareer.trim().toLowerCase();
+
+    if (myCareer.isNotEmpty) {
+      if (target.isNotEmpty && target == myCareer) {
+        score += 15;
+      } else if (authorCareer == myCareer) {
+        score += 11;
+      } else if (target.isEmpty) {
+        score += 6;
+      }
+    } else {
+      score += 8;
+    }
+
+    final textBlob = '${post.title} ${post.description}'.toLowerCase();
+    for (final skill in _currentUser.skills) {
+      final clean = skill.trim().toLowerCase();
+      if (clean.length >= 3 && textBlob.contains(clean)) {
+        score += 5;
+      }
+    }
+    for (final dip in _currentUser.diplomas) {
+      final clean = dip.trim().toLowerCase();
+      if (clean.length >= 4 && textBlob.contains(clean)) {
+        score += 4;
+      }
+    }
+    if (post.attachments.isNotEmpty) {
+      score += 4;
+    }
+    return score.clamp(68, 98);
+  }
+
+  /// Explica brevemente por qué este Match le puede interesar al estudiante actual.
+  String affinityReasonFor(Posting post) {
+    final myCareer = _currentUser.career.trim();
+    if (hasProfile && myCareer.isNotEmpty) {
+      if (post.targetCareer != null &&
+          post.targetCareer!.toLowerCase() == myCareer.toLowerCase()) {
+        return 'Busca tu carrera ($myCareer)';
+      }
+      if (post.authorCareer.toLowerCase() == myCareer.toLowerCase()) {
+        return 'De tu misma carrera ($myCareer)';
+      }
+      final textBlob = '${post.title} ${post.description}'.toLowerCase();
+      for (final skill in _currentUser.skills) {
+        if (skill.trim().length >= 3 &&
+            textBlob.contains(skill.trim().toLowerCase())) {
+          return 'Conecta con tu habilidad: $skill';
+        }
+      }
+    }
+    if (post.targetCareer != null && post.targetCareer!.trim().isNotEmpty) {
+      return 'Ideal para ${post.targetCareer}';
+    }
+    return 'Abierto a todas las carreras · Uniguajira';
+  }
+
+  /// Matches recomendados que le pueden interesar al usuario actual (excluye propios y ya likeados).
+  List<Posting> get recommendedPostings {
+    final candidates = feed
+        .where((p) => !isOwner(p) && !hasApplied(p))
+        .toList();
+    candidates.sort((a, b) {
+      final cmp = affinityScoreFor(b).compareTo(affinityScoreFor(a));
+      if (cmp != 0) return cmp;
+      return b.createdAt.compareTo(a.createdAt);
+    });
+    return candidates.take(6).toList();
+  }
+
+  /// Calcula la afinidad con otro estudiante del directorio para sugerir conexiones.
+  int peerAffinityScore(UserProfile peer) {
+    int score = 72;
+    if (hasProfile) {
+      if (peer.career.toLowerCase() == _currentUser.career.toLowerCase()) {
+        score += 14;
+      } else if (peer.faculty.toLowerCase() ==
+          _currentUser.faculty.toLowerCase()) {
+        score += 8;
+      }
+      if ((peer.semester - _currentUser.semester).abs() <= 2) {
+        score += 5;
+      }
+      final mySkills =
+          _currentUser.skills.map((s) => s.toLowerCase().trim()).toSet();
+      for (final s in peer.skills) {
+        if (mySkills.contains(s.toLowerCase().trim())) {
+          score += 5;
+        }
+      }
+    } else {
+      score += (peer.skills.length * 2).clamp(2, 12);
+    }
+    return score.clamp(72, 98);
+  }
+
+  /// Estudiantes recomendados con los que el usuario puede conectar según su perfil.
+  List<UserProfile> get recommendedPeers {
+    final peers = _directory.values
+        .where((u) => u.id != _currentUser.id && u.name.trim().isNotEmpty)
+        .toList();
+    peers.sort((a, b) => peerAffinityScore(b).compareTo(peerAffinityScore(a)));
+    return peers.take(6).toList();
+  }
+
   /// Matches ya existentes entre estudiantes de la plataforma.
   List<Posting> get campusMatches =>
       feed.where((p) => p.acceptedCount > 0).toList();
@@ -332,12 +461,34 @@ class AppState extends ChangeNotifier {
 
     _currentUser = updatedProfile;
     _posts.asMap().forEach((index, post) {
+      var changed = false;
+      var updatedPost = post;
       if (post.authorId == previousId || post.authorId == assignedId) {
-        final updatedPost = post.copyWith(
+        updatedPost = updatedPost.copyWith(
           authorId: assignedId,
           authorName: updatedProfile.name,
           authorCareer: updatedProfile.career,
         );
+        changed = true;
+      }
+      if (previousId != assignedId &&
+          (post.applicantIds.contains(previousId) ||
+              post.acceptedIds.contains(previousId))) {
+        final newApplicants = post.applicantIds
+            .map((id) => id == previousId ? assignedId : id)
+            .toSet()
+            .toList();
+        final newAccepted = post.acceptedIds
+            .map((id) => id == previousId ? assignedId : id)
+            .toSet()
+            .toList();
+        updatedPost = updatedPost.copyWith(
+          applicantIds: newApplicants,
+          acceptedIds: newAccepted,
+        );
+        changed = true;
+      }
+      if (changed) {
         _posts[index] = updatedPost;
         _safeCloudOp(() => _supabase.upsertPosting(updatedPost));
       }
@@ -476,6 +627,21 @@ class AppState extends ChangeNotifier {
     if (isOwner(post) || hasApplied(post)) return;
     final updated = post.copyWith(
       applicantIds: [...post.applicantIds, _currentUser.id],
+    );
+    _replace(post, updated);
+    unawaited(_saveLocalSnapshot());
+    _safeCloudOp(() => _supabase.upsertPosting(updated));
+    notifyListeners();
+  }
+
+  /// Permite retirar el Like ("Me interesa") de una publicación.
+  void withdrawApplication(Posting post) {
+    if (!hasApplied(post)) return;
+    final updated = post.copyWith(
+      applicantIds:
+          post.applicantIds.where((id) => id != _currentUser.id).toList(),
+      acceptedIds:
+          post.acceptedIds.where((id) => id != _currentUser.id).toList(),
     );
     _replace(post, updated);
     unawaited(_saveLocalSnapshot());
