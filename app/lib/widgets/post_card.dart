@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/posting.dart';
 import '../state/app_state.dart';
 import '../utils/time_ago.dart';
+import 'match_attachments_panel.dart';
 import 'profile_modals.dart';
 
 class PostCard extends StatelessWidget {
@@ -273,6 +274,13 @@ class PostCard extends StatelessWidget {
                     ],
                   ),
                 ],
+
+                if (posting.attachments.isNotEmpty)
+                  MatchAttachmentsPanel(
+                    posting: posting,
+                    compact: true,
+                    allowUpload: false,
+                  ),
 
                 const SizedBox(height: 12),
                 Divider(

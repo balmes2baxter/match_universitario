@@ -5,6 +5,7 @@ import '../models/posting.dart';
 import '../models/user_profile.dart';
 import '../state/app_state.dart';
 import '../utils/contact_launcher.dart';
+import '../widgets/match_attachments_panel.dart';
 import '../widgets/profile_modals.dart';
 
 class MatchScreen extends StatelessWidget {
@@ -441,6 +442,7 @@ class _ApplicantsCard extends StatelessWidget {
                 onAccept: () => appState.acceptApplicant(posting, applicant.id),
               );
             }),
+            MatchAttachmentsPanel(posting: posting),
           ],
         ),
       ),
@@ -767,6 +769,7 @@ class _ConfirmedCard extends StatelessWidget {
               const SizedBox(height: 12),
               _ContactBox(profile: author),
             ],
+            MatchAttachmentsPanel(posting: posting),
           ],
         ),
       ),
@@ -879,6 +882,7 @@ class _CampusMatchCard extends StatelessWidget {
               ],
             ),
           ],
+          MatchAttachmentsPanel(posting: posting),
         ],
       ),
     );

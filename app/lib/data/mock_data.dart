@@ -349,6 +349,18 @@ List<Posting> buildMockPostings() {
       createdAt: now.subtract(const Duration(hours: 8)),
       applicantIds: const ['u4', 'u13'],
       acceptedIds: const ['u13'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_p2_1',
+          name: 'Guia_Ejercicios_SQL_y_Normalizacion_Uniguajira.pdf',
+          kind: AttachmentKind.pdf,
+          mimeType: 'application/pdf',
+          sizeBytes: 248320,
+          uploaderId: 'u2',
+          uploaderName: 'Carlos Andrés Pérez',
+          createdAt: now.subtract(const Duration(hours: 4)),
+        ),
+      ],
     ),
     Posting(
       id: 'p3',
@@ -377,6 +389,18 @@ List<Posting> buildMockPostings() {
       createdAt: now.subtract(const Duration(days: 2)),
       applicantIds: const ['u1', 'u5'],
       acceptedIds: const ['u1'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_p4_1',
+          name: 'Anteproyecto_App_Transporte_Uniguajira.pdf',
+          kind: AttachmentKind.pdf,
+          mimeType: 'application/pdf',
+          sizeBytes: 412800,
+          uploaderId: 'u13',
+          uploaderName: 'Alex Rivera',
+          createdAt: now.subtract(const Duration(hours: 18)),
+        ),
+      ],
     ),
     Posting(
       id: 'p5',
@@ -393,6 +417,18 @@ List<Posting> buildMockPostings() {
       createdAt: now.subtract(const Duration(hours: 5)),
       applicantIds: const ['u2', 'u10', 'u13'],
       acceptedIds: const ['u2'],
+      attachments: [
+        MatchAttachment(
+          id: 'att_p5_1',
+          name: 'Diagrama_Entidad_Relacion_Tutorias_API.pdf',
+          kind: AttachmentKind.pdf,
+          mimeType: 'application/pdf',
+          sizeBytes: 318400,
+          uploaderId: 'u6',
+          uploaderName: 'Andrés Castillo',
+          createdAt: now.subtract(const Duration(hours: 2)),
+        ),
+      ],
     ),
     Posting(
       id: 'p6',

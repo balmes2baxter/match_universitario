@@ -354,6 +354,7 @@ class AppState extends ChangeNotifier {
     required String description,
     String? targetCareer,
     String? location,
+    List<MatchAttachment> attachments = const [],
   }) {
     final authorName =
         hasProfile ? _currentUser.name : 'Estudiante Uniguajira';
@@ -376,12 +377,79 @@ class AppState extends ChangeNotifier {
           (location?.trim().isEmpty ?? true) ? null : location!.trim(),
       createdAt: DateTime.now(),
       applicantIds: initialApplicants,
+      attachments: attachments,
     );
     _posts.add(post);
     unawaited(_saveLocalSnapshot());
     _safeCloudOp(() => _supabase.upsertPosting(post));
     notifyListeners();
     return post;
+  }
+
+  /// Adjunta una Imagen, Foto de cámara o PDF verificado a una convocatoria / Match
+  /// y la sincroniza en Supabase Storage + `public.postings`.
+  Future<MatchAttachment> addAttachmentToPost({
+    required Posting post,
+    required String fileName,
+    required String mimeType,
+    required Uint8List bytes,
+    required bool isPdf,
+  }) async {
+    String? uploadedUrl;
+    if (_supabase.isEnabled) {
+      uploadedUrl = await _supabase.uploadAttachmentToStorage(
+        postingId: post.id,
+        fileName: fileName,
+        mimeType: mimeType,
+        bytes: bytes,
+      );
+    }
+
+    final uploaderName =
+        hasProfile ? _currentUser.name : 'Estudiante Uniguajira';
+    final attachment = MatchAttachment(
+      id: 'att_${DateTime.now().microsecondsSinceEpoch}',
+      name: fileName,
+      kind: isPdf ? AttachmentKind.pdf : AttachmentKind.image,
+      mimeType: mimeType,
+      sizeBytes: bytes.length,
+      uploaderId: _currentUser.id,
+      uploaderName: uploaderName,
+      createdAt: DateTime.now(),
+      url: uploadedUrl,
+      // Si no hay URL pública o la imagen es pequeña (<700 KB), guardamos también base64 para vista rápida
+      dataBase64: (uploadedUrl == null || (!isPdf && bytes.length <= 700 * 1024))
+          ? base64Encode(bytes)
+          : null,
+    );
+
+    final current = _posts.firstWhere(
+      (p) => p.id == post.id,
+      orElse: () => post,
+    );
+    final updated = current.copyWith(
+      attachments: [...current.attachments, attachment],
+    );
+    _replace(current, updated);
+    unawaited(_saveLocalSnapshot());
+    _safeCloudOp(() => _supabase.upsertPosting(updated));
+    notifyListeners();
+    return attachment;
+  }
+
+  void removeAttachmentFromPost(Posting post, String attachmentId) {
+    final current = _posts.firstWhere(
+      (p) => p.id == post.id,
+      orElse: () => post,
+    );
+    final updated = current.copyWith(
+      attachments:
+          current.attachments.where((a) => a.id != attachmentId).toList(),
+    );
+    _replace(current, updated);
+    unawaited(_saveLocalSnapshot());
+    _safeCloudOp(() => _supabase.upsertPosting(updated));
+    notifyListeners();
   }
 
   void deletePost(Posting post) {

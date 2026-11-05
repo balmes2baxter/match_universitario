@@ -1,18 +1,21 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../config/environment.dart';
 import '../models/posting.dart';
 import '../models/user_profile.dart';
 
-/// Servicio REST ligero para sincronizar perfiles y convocatorias con Supabase
-/// (PostgREST API sobre PostgreSQL).
+/// Servicio REST ligero para sincronizar perfiles, convocatorias y archivos
+/// adjuntos (Imágenes y PDF) con Supabase (PostgREST + Supabase Storage).
 class SupabaseService {
   SupabaseService({
     String? baseUrl,
     String? anonKey,
     http.Client? client,
-  })  : _baseUrl = (baseUrl ?? Environment.supabaseUrl).trim().replaceAll(RegExp(r'/$'), ''),
+  })  : _baseUrl = (baseUrl ?? Environment.supabaseUrl)
+            .trim()
+            .replaceAll(RegExp(r'/$'), ''),
         _anonKey = (anonKey ?? Environment.supabaseAnonKey).trim(),
         _client = client ?? http.Client();
 
@@ -116,5 +119,49 @@ class SupabaseService {
     final cleanId = Uri.encodeQueryComponent(postId);
     final uri = Uri.parse('$_baseUrl/rest/v1/postings?id=eq.$cleanId');
     await _client.delete(uri, headers: _headers);
+  }
+
+  /// Sube un archivo verificado (solo Imagen o PDF) al bucket `match_attachments`
+  /// en Supabase Storage y devuelve su URL pública permanente.
+  Future<String?> uploadAttachmentToStorage({
+    required String postingId,
+    required String fileName,
+    required String mimeType,
+    required Uint8List bytes,
+  }) async {
+    if (!isEnabled || bytes.isEmpty) return null;
+    const allowedMimes = {
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/pdf',
+    };
+    if (!allowedMimes.contains(mimeType)) {
+      return null;
+    }
+
+    final safeName =
+        fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._\-]'), '_').toLowerCase();
+    final objectPath =
+        '$postingId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+    final uri = Uri.parse(
+      '$_baseUrl/storage/v1/object/match_attachments/$objectPath',
+    );
+    try {
+      final response = await _client.post(
+        uri,
+        headers: {
+          'apikey': _anonKey,
+          'Authorization': 'Bearer $_anonKey',
+          'Content-Type': mimeType,
+          'x-upsert': 'true',
+        },
+        body: bytes,
+      );
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return '$_baseUrl/storage/v1/object/public/match_attachments/$objectPath';
+      }
+    } catch (_) {}
+    return null;
   }
 }

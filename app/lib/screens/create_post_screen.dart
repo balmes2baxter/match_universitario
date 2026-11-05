@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/posting.dart';
 import '../state/app_state.dart';
+import '../utils/photo_picker.dart';
+import '../widgets/match_attachments_panel.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -19,6 +22,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _locationController = TextEditingController();
 
   PostType _type = PostType.buscaEquipo;
+  final List<_DraftMediaItem> _draftAttachments = [];
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -29,16 +34,56 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    context.read<AppState>().addPost(
-          type: _type,
-          title: _titleController.text,
-          description: _descriptionController.text,
-          targetCareer:
-              _type == PostType.evento ? null : _targetCareerController.text,
-          location: _type == PostType.evento ? _locationController.text : null,
-        );
+  void _addDraftFile(PickedMediaFile file) {
+    final appState = context.read<AppState>();
+    final uploaderName =
+        appState.hasProfile ? appState.currentUser.name : 'Estudiante Uniguajira';
+    final attachment = MatchAttachment(
+      id: 'att_${DateTime.now().microsecondsSinceEpoch}',
+      name: file.name,
+      kind: file.isPdf ? AttachmentKind.pdf : AttachmentKind.image,
+      mimeType: file.mimeType,
+      sizeBytes: file.uint8Bytes.length,
+      uploaderId: appState.currentUser.id,
+      uploaderName: uploaderName,
+      createdAt: DateTime.now(),
+      dataBase64: base64Encode(file.uint8Bytes),
+    );
+    setState(() {
+      _draftAttachments.add(_DraftMediaItem(attachment: attachment, raw: file));
+    });
+  }
+
+  void _removeDraftFile(String id) {
+    setState(() {
+      _draftAttachments.removeWhere((item) => item.attachment.id == id);
+    });
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    final appState = context.read<AppState>();
+    final created = appState.addPost(
+      type: _type,
+      title: _titleController.text,
+      description: _descriptionController.text,
+      targetCareer:
+          _type == PostType.evento ? null : _targetCareerController.text,
+      location: _type == PostType.evento ? _locationController.text : null,
+    );
+
+    for (final item in _draftAttachments) {
+      await appState.addAttachmentToPost(
+        post: created,
+        fileName: item.raw.name,
+        mimeType: item.raw.mimeType,
+        bytes: item.raw.uint8Bytes,
+        isPdf: item.raw.isPdf,
+      );
+    }
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Publicación creada')),
     );
@@ -143,15 +188,41 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
+            const SizedBox(height: 16),
+            DraftAttachmentsEditor(
+              attachments:
+                  _draftAttachments.map((e) => e.attachment).toList(),
+              onAdd: _addDraftFile,
+              onRemove: _removeDraftFile,
+            ),
             const SizedBox(height: 24),
             FilledButton.icon(
-              onPressed: _submit,
-              icon: const Icon(Icons.publish),
-              label: const Text('Publicar'),
+              onPressed: _isSubmitting ? null : _submit,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.publish),
+              label: Text(_isSubmitting ? 'Publicando...' : 'Publicar'),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+class _DraftMediaItem {
+  const _DraftMediaItem({
+    required this.attachment,
+    required this.raw,
+  });
+
+  final MatchAttachment attachment;
+  final PickedMediaFile raw;
 }
