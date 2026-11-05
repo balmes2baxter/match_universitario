@@ -9,12 +9,13 @@ abstract final class Environment {
 
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: '',
+    defaultValue: 'https://mljrlfxhyjegrmqdbscp.supabase.co',
   );
 
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: '',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sanJsZnhoeWplZ3JtcWRic2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1Njc4OTEsImV4cCI6MjEwOTE0Mzg5MX0.IFdEzlOgzxXba6K_l3s3OgurscfPn0ce9z-9uiS2FVE',
   );
 
   /// Indica si hay una instancia de Supabase configurada.

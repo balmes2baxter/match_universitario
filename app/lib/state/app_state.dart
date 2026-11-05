@@ -217,9 +217,20 @@ class AppState extends ChangeNotifier {
 
     final ok = await refreshFromCloud();
     if (ok && hasProfile) {
-      unawaited(_supabase.upsertProfile(_currentUser));
+      _safeCloudOp(() => _supabase.upsertProfile(_currentUser));
     }
     return ok;
+  }
+
+  void _safeCloudOp(Future<void> Function() op) {
+    if (!_supabase.isEnabled) return;
+    unawaited(() async {
+      try {
+        await op();
+      } catch (_) {
+        // Ignorar errores de red en modo offline o durante tests unitarios.
+      }
+    }());
   }
 
   /// Sincroniza perfiles y convocatorias desde Supabase PostgreSQL.
@@ -242,10 +253,10 @@ class AppState extends ChangeNotifier {
       } else if (_posts.isNotEmpty) {
         // Si la tabla en Supabase está recién creada y vacía, subimos la semilla inicial
         for (final u in _directory.values) {
-          unawaited(_supabase.upsertProfile(u));
+          _safeCloudOp(() => _supabase.upsertProfile(u));
         }
         for (final p in _posts) {
-          unawaited(_supabase.upsertPosting(p));
+          _safeCloudOp(() => _supabase.upsertPosting(p));
         }
       }
 
@@ -321,16 +332,12 @@ class AppState extends ChangeNotifier {
           authorCareer: updatedProfile.career,
         );
         _posts[index] = updatedPost;
-        if (_supabase.isEnabled) {
-          unawaited(_supabase.upsertPosting(updatedPost));
-        }
+        _safeCloudOp(() => _supabase.upsertPosting(updatedPost));
       }
     });
     _rebuildDirectory();
     unawaited(_saveLocalSnapshot());
-    if (_supabase.isEnabled) {
-      unawaited(_supabase.upsertProfile(updatedProfile));
-    }
+    _safeCloudOp(() => _supabase.upsertProfile(updatedProfile));
     notifyListeners();
   }
 
@@ -372,9 +379,7 @@ class AppState extends ChangeNotifier {
     );
     _posts.add(post);
     unawaited(_saveLocalSnapshot());
-    if (_supabase.isEnabled) {
-      unawaited(_supabase.upsertPosting(post));
-    }
+    _safeCloudOp(() => _supabase.upsertPosting(post));
     notifyListeners();
     return post;
   }
@@ -383,9 +388,7 @@ class AppState extends ChangeNotifier {
     if (!isOwner(post)) return;
     _posts.removeWhere((p) => p.id == post.id);
     unawaited(_saveLocalSnapshot());
-    if (_supabase.isEnabled) {
-      unawaited(_supabase.deletePosting(post.id));
-    }
+    _safeCloudOp(() => _supabase.deletePosting(post.id));
     notifyListeners();
   }
 
@@ -401,9 +404,7 @@ class AppState extends ChangeNotifier {
     );
     _replace(post, updated);
     unawaited(_saveLocalSnapshot());
-    if (_supabase.isEnabled) {
-      unawaited(_supabase.upsertPosting(updated));
-    }
+    _safeCloudOp(() => _supabase.upsertPosting(updated));
     notifyListeners();
   }
 
@@ -414,9 +415,7 @@ class AppState extends ChangeNotifier {
     );
     _replace(post, updated);
     unawaited(_saveLocalSnapshot());
-    if (_supabase.isEnabled) {
-      unawaited(_supabase.upsertPosting(updated));
-    }
+    _safeCloudOp(() => _supabase.upsertPosting(updated));
     notifyListeners();
   }
 
@@ -429,9 +428,7 @@ class AppState extends ChangeNotifier {
     );
     _replace(post, updated);
     unawaited(_saveLocalSnapshot());
-    if (_supabase.isEnabled) {
-      unawaited(_supabase.upsertPosting(updated));
-    }
+    _safeCloudOp(() => _supabase.upsertPosting(updated));
     notifyListeners();
   }
 
