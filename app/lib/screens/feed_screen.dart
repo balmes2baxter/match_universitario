@@ -217,17 +217,34 @@ class _FeedScreenState extends State<FeedScreen> {
               ],
             ],
           ),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 12 : 20,
-              vertical: 12,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+          body: RefreshIndicator(
+            color: scheme.primary,
+            backgroundColor: scheme.surface,
+            onRefresh: () async {
+              final ok = await appState.refreshFromCloud();
+              if (context.mounted && ok) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Tablero actualizado con los últimos avisos'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 20,
+                vertical: 12,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     // 1. AVISO PARA USUARIO NUEVO (DISCRETO, ELEGANTE Y COMPACTO)
                     if (!appState.hasProfile)
                       Container(
@@ -520,6 +537,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   ],
                 ),
               ),
+            ),
             ),
           ),
         );

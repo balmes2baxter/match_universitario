@@ -169,12 +169,29 @@ class _MatchScreenState extends State<MatchScreen> {
                 ),
             ],
           ),
-          body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 980),
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: 40),
-                children: [
+          body: RefreshIndicator(
+            color: scheme.primary,
+            backgroundColor: scheme.surface,
+            onRefresh: () async {
+              final ok = await appState.refreshFromCloud();
+              if (context.mounted && ok) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Matches y conexiones sincronizados'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 980),
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding: const EdgeInsets.only(bottom: 40),
+                  children: [
                   // CABECERA RESUMEN + FILTROS RÁPIDOS EN ORDEN
                   _MatchesOverviewBanner(
                     user: appState.currentUser,
@@ -371,6 +388,7 @@ class _MatchScreenState extends State<MatchScreen> {
               ),
             ),
           ),
+        ),
         );
       },
     );

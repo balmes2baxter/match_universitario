@@ -42,6 +42,7 @@ class AppState extends ChangeNotifier {
   String _cloudUrl = Environment.supabaseUrl;
   String _cloudAnonKey = Environment.supabaseAnonKey;
   String get cloudUrl => _cloudUrl;
+  Timer? _pollingTimer;
 
   late UserProfile _currentUser;
   final List<Posting> _posts = [];
@@ -290,6 +291,7 @@ class AppState extends ChangeNotifier {
       if (_supabase.isEnabled) {
         await refreshFromCloud();
       }
+      _startPeriodicSync();
     } catch (_) {
       // En entornos de test sin SharedPreferences continuamos en memoria.
     }
@@ -352,6 +354,7 @@ class AppState extends ChangeNotifier {
     }
 
     final ok = await refreshFromCloud();
+    _startPeriodicSync();
     if (ok && hasProfile) {
       _safeCloudOp(() => _supabase.upsertProfile(_currentUser));
     }
@@ -369,11 +372,31 @@ class AppState extends ChangeNotifier {
     }());
   }
 
+  void _startPeriodicSync() {
+    _pollingTimer?.cancel();
+    if (!_supabase.isEnabled) return;
+    // Sincronización inteligente periódica cada 45 segundos para mantener
+    // el tablero actualizado en vivo sin colapsar la conexión ni la batería.
+    _pollingTimer = Timer.periodic(const Duration(seconds: 45), (_) {
+      if (_supabase.isEnabled && !_isSyncing) {
+        refreshFromCloud(silent: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
   /// Sincroniza perfiles y convocatorias desde Supabase PostgreSQL.
-  Future<bool> refreshFromCloud() async {
+  Future<bool> refreshFromCloud({bool silent = false}) async {
     if (!_supabase.isEnabled) return false;
     _isSyncing = true;
-    notifyListeners();
+    if (!silent) {
+      notifyListeners();
+    }
     try {
       final cloudProfiles = await _supabase.fetchProfiles();
       for (final profile in cloudProfiles) {
@@ -537,7 +560,7 @@ class AppState extends ChangeNotifier {
       applicantIds: initialApplicants,
       attachments: attachments,
     );
-    _posts.add(post);
+    _posts.insert(0, post);
     unawaited(_saveLocalSnapshot());
     _safeCloudOp(() => _supabase.upsertPosting(post));
     notifyListeners();
