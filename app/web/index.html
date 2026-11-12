@@ -8,6 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="description" content="MatchUni · Conecta con estudiantes de la Universidad de La Guajira para tesis, grupos de estudio y eventos.">
   <meta name="theme-color" content="#EA6A00">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 
   <!-- iOS / PWA meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -22,14 +25,49 @@
   <title>MatchUni · Universidad de La Guajira</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    body {
+    html, body {
       background-color: #FAF6F0;
       margin: 0;
       padding: 0;
+      overscroll-behavior-y: contain;
     }
   </style>
+  <script>
+    // Fuerza actualización inmediata en teléfonos que ya tenían la PWA instalada o en caché
+    (function() {
+      var APP_BUILD_VERSION = 'matchuni_v2026_11_12_final_2';
+      try {
+        var prevVersion = localStorage.getItem('matchuni_sw_build_version');
+        if (prevVersion !== APP_BUILD_VERSION) {
+          localStorage.setItem('matchuni_sw_build_version', APP_BUILD_VERSION);
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              var hadSw = regs && regs.length > 0;
+              Promise.all(regs.map(function(r) { return r.unregister(); })).then(function() {
+                if ('caches' in window) {
+                  caches.keys().then(function(keys) {
+                    return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+                  }).then(function() {
+                    if (hadSw) {
+                      window.location.reload();
+                    }
+                  });
+                } else if (hadSw) {
+                  window.location.reload();
+                }
+              });
+            });
+          }
+        } else if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(r) { r.update(); });
+          });
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js?v=20261112_2" async></script>
 </body>
 </html>

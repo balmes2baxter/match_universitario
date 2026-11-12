@@ -71,8 +71,28 @@ class _LandingScreenState extends State<LandingScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isMobile = constraints.maxWidth < 600;
-            return SingleChildScrollView(
-              controller: _scrollController,
+            return RefreshIndicator(
+              color: const Color(0xFFEA6A00),
+              onRefresh: () async {
+                final ok = await appState.refreshFromCloud();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ok
+                            ? '¡Campus actualizado con los últimos Matches en vivo!'
+                            : 'Datos sincronizados al día',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1140),
@@ -195,6 +215,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   ),
                 ),
               ),
+            ),
             );
           },
         ),

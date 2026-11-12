@@ -119,12 +119,33 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(width: 8),
             ],
           ),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 12 : 20,
-              vertical: 14,
-            ),
-            child: Center(
+          body: RefreshIndicator(
+            color: scheme.primary,
+            backgroundColor: scheme.surface,
+            onRefresh: () async {
+              final ok = await appState.refreshFromCloud();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok
+                          ? 'Perfil y Matches sincronizados con la nube'
+                          : 'Perfil actualizado',
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 20,
+                vertical: 14,
+              ),
+              child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1080),
                 child: Column(
@@ -221,6 +242,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         );
       },
